@@ -1,0 +1,1439 @@
+<!-- Helper Functions - Header Section: Dashboard -->
+<!-- ================= RS-Style Discord2Discord Bridge Dashboard (Multi-Panel Popup UI) ================= -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RS - MIRROR WORLD</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+<style>
+:root{
+  --bg:#0a0e14; --panel:#1a1d25; --msg:#23262d; --muted:#2e3239;
+  --border:#373b43; --text:#e4e6eb; --sub:#9ca3af;
+  --accent:#5865f2; --shadow:0 4px 20px rgba(0,0,0,.5);
+  --amazon:#ff6b35; --mavely:#8860d0; --upcoming:#3fb399;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%; overflow:hidden}
+body{background:var(--bg); color:var(--text); font:13px/1.5 "gg sans",Arial,sans-serif}
+
+/* Header */
+.header{background:var(--panel); border-bottom:1px solid var(--border); padding:8px 12px; display:flex; align-items:center; justify-content:space-between; position:fixed; top:0; left:0; right:0; z-index:100}
+.brand{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px}
+.dot{width:6px; height:6px; border-radius:50%; background:#23c483; box-shadow:0 0 8px #23c483}
+
+/* Bot Indicators */
+.bot-indicators{display:flex; gap:12px; margin-left:20px; align-items:center}
+.bot-indicator{font-size:11px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:4px}
+.bot-indicator.clickable{cursor:pointer; padding:4px 8px; border-radius:4px; transition:background 0.2s}
+.bot-indicator.clickable:hover{background:var(--muted)}
+.status-dot{font-size:10px; animation:pulse 2s infinite}
+button{padding:6px 12px; border:1px solid var(--border); background:var(--msg); color:var(--text); border-radius:6px; cursor:pointer; font-size:12px; transition:all 0.2s}
+button:hover{background:var(--muted)}
+
+/* Main Container */
+.main-container{display:flex; gap:8px; padding:8px; padding-top:40px; height:100vh; overflow:hidden}
+
+/* Sidebar */
+.sidebar{width:300px; background:var(--panel); border:1px solid var(--border); border-radius:8px; display:flex; flex-direction:column; overflow:hidden}
+.sidebar-header{padding:10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:13px}
+.collapse-btn{width:20px; height:20px; background:none; border:none; cursor:pointer; font-size:16px; padding:0; display:flex; align-items:center; justify-content:center}
+.sidebar-content{padding:8px; overflow-y:auto; flex:1}
+.category{margin-bottom:8px}
+.category-title{padding:6px 8px; font-weight:700; font-size:11px; text-transform:uppercase; color:var(--sub); display:flex; align-items:center; gap:6px}
+.category-title::before{content:'▾'; font-size:10px; opacity:0.7}
+.category-channels{margin-top:4px}
+.channel-item{padding:8px; margin-bottom:4px; border-radius:6px; cursor:pointer; transition:background 0.2s; border:1px solid transparent}
+.channel-item:hover{background:var(--msg)}
+.channel-item.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+.channel-name{font-weight:600; font-size:12px; margin-bottom:2px}
+.channel-id{font-size:10px; color:var(--sub); font-family:monospace; word-break:break-all}
+
+/* Main Panels */
+.panels-container{flex:1; display:grid; grid-template-columns:1fr 1fr; gap:8px; overflow:hidden}
+
+/* Panel Component */
+.panel{background:var(--panel); border:1px solid var(--border); border-radius:8px; display:flex; flex-direction:column; overflow:hidden; position:relative; min-height:200px}
+.panel-header{padding:8px 10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:var(--msg); cursor:pointer; transition:background 0.2s; position:relative}
+.panel-header:hover{background:var(--muted)}
+.panel-header::after{content:'▼'; position:absolute; right:10px; font-size:10px; color:var(--sub); transition:transform 0.2s}
+.panel-header.collapsed::after{transform:rotate(-90deg)}
+.panel-title{font-weight:700; font-size:12px; display:flex; align-items:center; gap:6px}
+.panel-count{padding:2px 6px; background:var(--border); border-radius:10px; font-size:10px}
+.panel-body{flex:1; overflow-y:auto; padding:8px; max-height:400px}
+.panel-body.collapsed{display:none}
+.empty{text-align:center; color:var(--sub); padding:20px; font-size:12px}
+
+/* Search/Filter Input */
+.panel-search{width:100%; padding:6px 8px; margin-bottom:8px; border:1px solid var(--border); background:var(--msg); color:var(--text); border-radius:4px; font-size:11px; outline:none}
+.panel-search:focus{border-color:var(--accent)}
+.panel-search::placeholder{color:var(--sub)}
+
+/* Siren indicator for @everyone pings */
+.message-entry.everyone-ping{border-left-color:#ed4245; background:rgba(237, 66, 69, 0.1)}
+.message-entry.everyone-ping .siren{color:#ed4245; font-size:14px; margin-right:4px}
+
+/* Clickable Discord message links */
+.discord-link{color:#5865f2; text-decoration:underline; cursor:pointer; transition:color 0.2s}
+.discord-link:hover{color:#4752c4}
+.message-content a{color:#5865f2; text-decoration:underline; cursor:pointer}
+.message-content a:hover{color:#4752c4}
+
+/* Live Indicator */
+.live-indicator{width:6px; height:6px; border-radius:50%; box-shadow:0 0 6px currentColor; animation:pulse 2s infinite; transition:all 0.3s}
+.live-indicator.normal{background:#23c483; color:#23c483}
+.live-indicator.warning{background:#ffbd44; color:#ffbd44; animation:pulse 1s infinite}
+.live-indicator.error{background:#ed4245; color:#ed4245; animation:pulse 0.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* Message Entry */
+.message-entry{padding:8px; margin-bottom:6px; background:var(--msg); border-radius:6px; border-left:3px solid var(--accent); font-size:12px; transition:background 0.2s}
+.message-entry:hover{background:var(--muted)}
+.message-entry.amazon{border-left-color:var(--amazon)}
+.message-entry.mavely{border-left-color:var(--mavely)}
+.message-entry.upcoming{border-left-color:var(--upcoming)}
+.message-meta{display:flex; gap:6px; align-items:center; margin-bottom:4px; font-size:11px; color:var(--sub)}
+.badge{padding:1px 6px; border-radius:8px; font-size:9px; font-weight:700; text-transform:uppercase}
+.badge-amazon{background:var(--amazon); color:#fff}
+.badge-mavely{background:var(--mavely); color:#fff}
+.badge-upcoming{background:var(--upcoming); color:#fff}
+.message-content{word-wrap:break-word; color:var(--text)}
+
+/* Channel Preview */
+.preview-message{padding:8px; margin-bottom:6px; background:var(--msg); border-radius:6px; font-size:12px}
+.preview-header{display:flex; gap:8px; align-items:center; margin-bottom:6px}
+.preview-avatar{width:24px; height:24px; border-radius:50%; background:var(--accent)}
+.preview-user{font-weight:600; font-size:11px}
+.preview-time{font-size:10px; color:var(--sub)}
+
+/* Backend Logs */
+.backend-log{border-left:3px solid var(--accent); margin-bottom:8px; padding:8px; background:var(--msg); border-radius:4px}
+.backend-log.ok{border-left-color:#43b581}
+.backend-log.error{border-left-color:#ed4245}
+.backend-log.info{border-left-color:#5865f2}
+.log-header{display:flex; gap:8px; align-items:center; margin-bottom:4px; font-size:11px}
+.log-time{color:var(--sub); font-family:monospace}
+.log-status{font-weight:600; padding:2px 6px; border-radius:3px; font-size:10px}
+.log-status.ok{background:#43b581; color:#fff}
+.log-status.error{background:#ed4245; color:#fff}
+.log-status.info{background:#5865f2; color:#fff}
+.log-type{color:var(--accent); font-weight:600; font-size:10px}
+.log-content{font-size:11px; color:var(--text); font-family:monospace; word-break:break-word}
+
+/* Toggle Buttons */
+.toggle-sidebar{position:fixed; top:48px; left:12px; z-index:50; background:var(--accent); border:none; color:#fff; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer}
+.toggle-sidebar:hover{opacity:0.9}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--msg)}
+::-webkit-scrollbar-thumb{background:var(--muted); border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border)}
+
+/* Modal */
+.modal{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center}
+.modal.show{display:flex}
+.modal-content{background:var(--panel); border-radius:8px; padding:20px; width:500px; max-width:90vw; border:1px solid var(--border)}
+.modal-title{font-size:16px; font-weight:700; margin-bottom:16px}
+.modal-field{margin-bottom:12px}
+.modal-label{display:block; margin-bottom:4px; font-weight:600; font-size:12px}
+.modal-input{width:100%; padding:8px; border:1px solid var(--border); background:var(--msg); color:var(--text); border-radius:6px; font-size:12px}
+.modal-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:16px}
+</style>
+<style>
+/* Cursor Network View – style overrides */
+:root{
+  --bg:#0b0f14;
+  --panel:#0f141a;
+  --msg:#0c1117;
+  --muted:#121821;
+  --border:#1e2733;
+  --text:#e6edf3;
+  --sub:#8b949e;
+  --accent:#3b82f6;
+  --shadow:0 6px 24px rgba(0,0,0,.55);
+  --font-ui: Inter, "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+body{font:12px/1.5 var(--font-ui); background:var(--bg); color:var(--text)}
+.sidebar{border-radius:10px; box-shadow:var(--shadow)}
+.sidebar-header{font-size:12px; letter-spacing:.2px}
+.category-title{font-size:10px; letter-spacing:.6px}
+.channel-item{background:var(--msg); border:1px solid var(--border); border-radius:8px; margin-bottom:6px}
+.channel-item:hover{background:var(--muted)}
+.channel-item.active{background:rgba(59,130,246,.15); border-color:var(--accent)}
+.channel-id{font-family:var(--font-mono)}
+.panel{border-radius:10px; box-shadow:var(--shadow)}
+.panel-title{letter-spacing:.2px}
+.panel-body{font-family:var(--font-mono)}
+.message-entry{background:var(--msg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px}
+.message-content{font-family:var(--font-mono); font-size:11px}
+.backend-log{border:1px solid var(--border); border-radius:8px}
+.log-time{font-family:var(--font-mono)}
+.log-content{font-family:var(--font-mono)}
+.toggle-sidebar{border-radius:6px}
+.panel-search{border-radius:6px; font-family:var(--font-ui)}
+
+/* Channel Map UI Styles */
+.channel-entry{background:var(--msg); border:1px solid var(--border); border-radius:8px; margin-bottom:8px; padding:10px; transition:background 0.2s}
+.channel-entry:hover{background:var(--muted)}
+.channel-entry-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px}
+.channel-entry-title{display:flex; align-items:center; gap:4px; font-weight:600; font-size:13px}
+.channel-hash{color:var(--sub); font-size:14px}
+.channel-entry-name{color:var(--text)}
+.edit-btn{padding:4px 10px; background:var(--accent); border:1px solid var(--accent); color:#fff; border-radius:4px; cursor:pointer; font-size:11px; transition:opacity 0.2s}
+.edit-btn:hover{opacity:0.8}
+.channel-entry-body{display:flex; flex-direction:column; gap:6px}
+.channel-entry-row{display:flex; justify-content:space-between; align-items:center; font-size:11px}
+.channel-entry-label{color:var(--sub); font-weight:600}
+.channel-entry-value{color:var(--text); font-family:var(--font-mono); font-size:10px}
+.webhook-link{color:var(--accent); text-decoration:none; cursor:pointer; font-weight:600; transition:color 0.2s}
+.webhook-link:hover{color:#5a9fff}
+.panel-footer{padding:10px; border-top:1px solid var(--border); display:flex; gap:8px}
+.panel-footer button{flex:1}
+</style>
+</head>
+
+<body>
+<div class="header">
+  <div class="brand">
+    <span class="dot"></span> RS - MIRROR WORLD
+    <!-- Bot Status Indicators - positioned to the right of title -->
+    <div class="bot-indicators">
+      <span id="d2d-status" class="bot-indicator clickable" onclick="showConsole('botlogs')">D2D: <span id="d2d-indicator" class="status-dot">🟢</span></span>
+      <span id="forwarder-status" class="bot-indicator clickable" onclick="showConsole('botlogs')">Ping & Filter: <span id="forwarder-indicator" class="status-dot">🟢</span></span>
+    </div>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center">
+    <button onclick="showSetupStatus()">ℹ️ Setup</button>
+    <button onclick="showConsole('all')">👀 View Logs</button>
+    <button onclick="loadAll()">🔄 Refresh</button>
+    <button onclick="shutdownSystem()" style="background:#ed4245; border-color:#ed4245; color:#fff">⏻ Shutdown</button>
+  </div>
+</div>
+
+<div class="main-container">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span>📋 Channels</span>
+      <button class="collapse-btn" onclick="toggleSidebar()" title="Collapse">◄</button>
+    </div>
+    <div class="sidebar-content" id="channel-list"></div>
+    <div style="padding:8px; border-top:1px solid var(--border)">
+      <button onclick="showAddChannelModal()" style="width:100%; margin-bottom:6px; background:var(--accent); border-color:var(--accent); color:#fff">+ Add</button>
+      <button onclick="downloadMap()" style="width:100%; margin-bottom:6px">💾 Export</button>
+      <button onclick="showImportChannelModal()" style="width:100%">⬆️ Import</button>
+    </div>
+  </div>
+
+  <!-- Main Panels Grid -->
+  <div class="panels-container">
+    <!-- Left Column -->
+    <div style="display:flex; flex-direction:column; gap:8px; overflow-y:auto">
+      <div class="panel">
+        <div class="panel-header" onclick="togglePanel(this)">
+          <div class="panel-title"><span class="live-indicator normal"></span> 🔁 D2D Logs</div>
+          <div class="panel-count" id="d2d-count">0</div>
+        </div>
+        <div class="panel-body" id="d2d-logs">
+          <input type="text" class="panel-search" id="d2d-search" placeholder="Search D2D logs...">
+          <div class="empty">No D2D logs yet</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header" onclick="togglePanel(this)">
+          <div class="panel-title"><span class="live-indicator normal"></span> ❗ Errors</div>
+          <div class="panel-count" id="errors-count">0</div>
+        </div>
+        <div class="panel-body" id="errors-logs">
+          <input type="text" class="panel-search" id="errors-search" placeholder="Search errors...">
+          <div class="empty">No errors yet</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right Column -->
+    <div style="display:flex; flex-direction:column; gap:8px; overflow-y:auto">
+      <div class="panel">
+        <div class="panel-header" onclick="togglePanel(this)">
+          <div class="panel-title"><span class="live-indicator normal"></span> 🛒 Amazon</div>
+          <div class="panel-count" id="amazon-count">0</div>
+        </div>
+        <div class="panel-body" id="amazon-logs">
+          <input type="text" class="panel-search" id="amazon-search" placeholder="Search Amazon messages...">
+          <div class="empty">No Amazon links yet</div>
+        </div>
+      </div>
+             <div class="panel">
+         <div class="panel-header" onclick="togglePanel(this)">
+           <div class="panel-title"><span class="live-indicator normal"></span> 🔗 Mavely</div>
+           <div class="panel-count" id="mavely-count">0</div>
+         </div>
+         <div class="panel-body" id="mavely-logs">
+           <input type="text" class="panel-search" id="mavely-search" placeholder="Search Mavely messages...">
+           <div class="empty">No Mavely links yet</div>
+         </div>
+       </div>
+       <div class="panel">
+         <div class="panel-header" onclick="togglePanel(this)">
+           <div class="panel-title"><span class="live-indicator normal"></span> 📅 Upcoming</div>
+           <div class="panel-count" id="upcoming-count">0</div>
+         </div>
+         <div class="panel-body" id="upcoming-logs">
+           <input type="text" class="panel-search" id="upcoming-search" placeholder="Search upcoming messages...">
+           <div class="empty">No upcoming releases yet</div>
+         </div>
+       </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- Setup Status Modal -->
+<div class="modal" id="setup-modal">
+  <div class="modal-content" style="width:700px; max-width:95vw">
+    <div class="modal-title">ℹ️ System Setup</div>
+    <div id="setup-content" style="max-height:500px; overflow-y:auto; font-family:monospace; font-size:11px; white-space:pre-wrap"></div>
+    <div class="modal-actions">
+      <button onclick="hideSetupStatus()" style="background:var(--accent); border-color:var(--accent); color:#fff">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Error Details Modal -->
+<div class="modal" id="error-modal">
+  <div class="modal-content">
+    <div class="modal-title">⚠️ System Status & Errors</div>
+    <div id="error-content" style="max-height:400px; overflow-y:auto; font-family:monospace; font-size:11px; background:var(--msg); padding:12px; border-radius:6px; white-space:pre-wrap; word-break:break-word"></div>
+    <div class="modal-actions">
+      <button onclick="hideErrorModal()" style="background:var(--accent); border-color:var(--accent); color:#fff">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Channel Modal -->
+<div class="modal" id="add-modal">
+  <div class="modal-content">
+    <div class="modal-title">Add Channel Mapping</div>
+    <div class="modal-field">
+      <label class="modal-label">Channel ID</label>
+      <input type="text" class="modal-input" id="input-channel-id" placeholder="1390535329575866368">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Webhook URL</label>
+      <input type="text" class="modal-input" id="input-webhook" placeholder="https://discord.com/api/webhooks/...">
+    </div>
+    <div class="modal-actions">
+      <button onclick="hideAddModal()">Cancel</button>
+      <button onclick="addChannel()" style="background:var(--accent); border-color:var(--accent); color:#fff">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Live Console Modal -->
+<div class="modal" id="console-modal">
+  <div class="modal-content">
+    <div class="modal-title">👀 Live Logs</div>
+    <div id="console-content" style="max-height:400px; overflow-y:auto; font-family:monospace; font-size:11px; background:var(--msg); padding:12px; border-radius:6px; white-space:pre-wrap; word-break:break-word"></div>
+    <div class="modal-actions">
+      <button onclick="copyConsole()">Copy</button>
+      <button onclick="hideConsole()" style="background:var(--accent); border-color:var(--accent); color:#fff">Close</button>
+    </div>
+  </div>
+  </div>
+
+<!-- Fetch Recent Modal -->
+<div class="modal" id="fetch-modal">
+  <div class="modal-content" style="width:800px; max-width:95vw">
+    <div class="modal-title">🔎 Last 5 Unique Messages Per Source Channel</div>
+    <div id="fetch-content" style="max-height:500px; overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button onclick="hideFetchRecent()" style="background:var(--accent); border-color:var(--accent); color:#fff">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Channel Map Add Modal -->
+<div class="modal" id="channel-map-add-modal">
+  <div class="modal-content">
+    <div class="modal-title">➕ Add Channel Mapping</div>
+    <div class="modal-field">
+      <label class="modal-label">Source Channel ID</label>
+      <input type="text" class="modal-input" id="add-source-id" placeholder="1390535329575866368">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Webhook URL</label>
+      <input type="text" class="modal-input" id="add-webhook-url" placeholder="https://discord.com/api/webhooks/...">
+    </div>
+    <div class="modal-actions">
+      <button onclick="hideAddChannelModal()">Cancel</button>
+      <button onclick="addChannelMapping()" style="background:var(--accent); border-color:var(--accent); color:#fff">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Channel Map Edit Modal -->
+<div class="modal" id="channel-map-edit-modal">
+  <div class="modal-content">
+    <div class="modal-title">✏️ Edit Channel Mapping</div>
+    <input type="hidden" id="edit-original-source-id">
+    <div class="modal-field">
+      <label class="modal-label">Source Channel ID</label>
+      <input type="text" class="modal-input" id="edit-source-id" disabled>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Webhook URL</label>
+      <input type="text" class="modal-input" id="edit-webhook-url" placeholder="https://discord.com/api/webhooks/...">
+    </div>
+    <div class="modal-actions">
+      <button onclick="deleteChannelMapping()" style="background:#ed4245; border-color:#ed4245; color:#fff">Delete</button>
+      <button onclick="hideEditChannelModal()">Cancel</button>
+      <button onclick="saveChannelMapping()" style="background:var(--accent); border-color:var(--accent); color:#fff">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Channel Map Import Modal -->
+<div class="modal" id="channel-map-import-modal">
+  <div class="modal-content">
+    <div class="modal-title">⬆️ Import Channel Map</div>
+    <div class="modal-field">
+      <label class="modal-label">Select JSON File</label>
+      <input type="file" class="modal-input" id="import-file-input" accept=".json">
+    </div>
+    <div style="padding:10px; background:var(--msg); border-radius:6px; margin-bottom:12px; font-size:11px; color:var(--sub)">
+      ⚠️ Warning: This will replace the current channel map with the imported data.
+    </div>
+    <div class="modal-actions">
+      <button onclick="hideImportChannelModal()">Cancel</button>
+      <button onclick="importChannelMap()" style="background:var(--accent); border-color:var(--accent); color:#fff">Import</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const AUTO_REFRESH_MS = 5000;
+let mapData = {};
+let localAdds = {};
+let logsCache = [];
+let selectedChannelId = null;
+let sidebarCollapsed = false;
+let channelMeta = null; // categories + channels from server
+let channelNameLookup = {}; // id -> name map built from meta/logs
+let searchFilters = {
+  amazon: '',
+  mavely: '',
+  upcoming: '',
+  d2d: '',
+  errors: '',
+  preview: ''
+};
+let lastStatus = null;
+let currentConsoleFilterType = 'all'; // 'all' | 'botlogs' | 'filteredlogs' | 'd2dlogs'
+// Console variables removed - using organized log files instead
+let autoRefreshTimer = null; // ensure only one interval is active
+let isLoadingAll = false;    // prevent overlapping loadAll executions
+
+async function loadAll(hard=false){
+  console.log('[DEBUG] Starting loadAll...');
+  if (isLoadingAll) { console.log('[DEBUG] Skipping loadAll - already running'); return; }
+  isLoadingAll = true;
+  try {
+    if(hard){ logsCache = []; channelMeta = null; channelNameLookup = {}; mapData = {}; localAdds = {}; }
+    await Promise.all([loadMap(), loadChannels(), loadLogs(), loadStatus()]);
+    console.log('[DEBUG] loadAll completed successfully');
+  } catch (e) {
+    console.error('[ERROR] loadAll failed:', e);
+  } finally {
+    isLoadingAll = false;
+  }
+}
+
+async function showSetupStatus(){
+  try{
+    const res = await fetch('/startup_status?'+Date.now());
+    if(!res.ok){ throw new Error('HTTP '+res.status); }
+    const data = await res.json();
+    const s = (data.status||{});
+    const mb = s.mention_bot || {};
+    const d2d = s.d2d || {};
+    const ff = s.filter_forwarder || {};
+    const lines = [];
+    lines.push('=== Mention Bot ===');
+    lines.push(`Detected: ${mb.detected ? 'yes' : 'no'}`);
+    if(mb.server_name) lines.push(`Server: ${mb.server_name}`);
+    if(mb.destination_server_id) lines.push(`Destination Server ID: ${mb.destination_server_id}`);
+    if(mb.mode) lines.push(`Mode: ${mb.mode}`);
+    if(mb.webhook_only !== null && mb.webhook_only !== undefined) lines.push(`WEBHOOK_ONLY: ${mb.webhook_only}`);
+    if((mb.ping_channels||[]).length) lines.push(`PING_CHANNELS: [${mb.ping_channels.join(', ')}]`);
+    lines.push('');
+    lines.push('=== D2D Bridge ===');
+    lines.push(`Channel Map Count: ${d2d.channel_map_count || 0}`);
+    if(d2d.latest_forward_timestamp) lines.push(`Latest Forward: ${d2d.latest_forward_timestamp}`);
+    lines.push('');
+    lines.push('=== Filtered Forwarder ===');
+    if(ff.latest_filter_timestamp) lines.push(`Latest Filter: ${ff.latest_filter_timestamp}`);
+    if((ff.link_types_seen||[]).length) lines.push(`Link Types Seen: ${ff.link_types_seen.join(', ')}`);
+    document.getElementById('setup-content').textContent = lines.join('\n');
+    document.getElementById('setup-modal').classList.add('show');
+  }catch(e){
+    document.getElementById('setup-content').textContent = 'Failed to load setup status.';
+    document.getElementById('setup-modal').classList.add('show');
+  }
+}
+
+function hideSetupStatus(){
+  document.getElementById('setup-modal').classList.remove('show');
+}
+
+async function loadMap(){
+  try{
+    const res = await fetch('channel_map.json?'+Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    mapData = await res.json();
+    renderChannels();
+  }catch(e){
+    // Map loading failed - this is not critical for bot status
+  }
+}
+
+async function loadChannels(){
+  try{
+    const res = await fetch('/channels_meta?'+Date.now());
+    if(!res.ok) return;
+    channelMeta = await res.json();
+    // Build channel name lookup from server metadata
+    channelNameLookup = {};
+    try{
+      (channelMeta.destinations||[]).forEach(d => {
+        if(d && d.id){ channelNameLookup[String(d.id)] = d.name || channelNameLookup[String(d.id)]; }
+        (d.sources||[]).forEach(s => {
+          if(s && s.source_channel_id){
+            const id = String(s.source_channel_id);
+            channelNameLookup[id] = channelNameLookup[id] || `# ${id.slice(-6)}`;
+          }
+        });
+      });
+      (channelMeta.categories||[]).forEach(cat => {
+        (cat.channels||[]).forEach(ch => {
+          if(ch && ch.id){ channelNameLookup[String(ch.id)] = ch.name || channelNameLookup[String(ch.id)]; }
+        });
+      });
+    }catch(e){/* ignore */}
+    renderChannels();
+  }catch(e){ /* ignore */ }
+}
+
+// Safe timestamp parser for format 'YYYY-MM-DD HH:MM:SS'
+function parseTs(ts){
+  if(!ts) return new Date(0);
+  try{
+    // Replace space with 'T' for safer parsing
+    const isoLike = String(ts).replace(' ', 'T');
+    const d = new Date(isoLike);
+    if(!isNaN(d.getTime())) return d;
+  }catch(e){/* ignore */}
+  return new Date(0);
+}
+
+async function loadLogs(){
+  console.log('[DEBUG] Starting loadLogs...');
+  let hasError = false;
+  try{
+    // Load organized log types
+    const logTypes = ['filteredlogs.json', 'd2dlogs.json', 'botlogs.json'];
+    const allLogs = [];
+    const latestByType = { filteredlogs: 0, d2dlogs: 0, botlogs: 0 };
+    
+    for (const logType of logTypes) {
+      try {
+        const res = await fetch(logType + '?' + Date.now());
+        console.log('[DEBUG]', logType, 'response status:', res.status);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.logs && Array.isArray(data.logs)) {
+            // Add log type to each entry and track latest per type
+            data.logs.forEach(log => {
+              const typeKey = logType.replace('.json', '');
+              log.log_type = typeKey;
+              const t = parseTs(log.timestamp).getTime();
+              if (t && latestByType[typeKey] < t) latestByType[typeKey] = t;
+            });
+            allLogs.push(...data.logs);
+            console.log('[DEBUG] Loaded', data.logs.length, 'entries from', logType);
+          }
+        }
+      } catch (e) {
+        console.warn('[WARNING] Failed to load', logType, ':', e.message);
+      }
+    }
+    
+    // Sort by timestamp (newest first) using robust parser
+    logsCache = allLogs.sort((a, b) => {
+      const timeA = parseTs(a.timestamp).getTime();
+      const timeB = parseTs(b.timestamp).getTime();
+      return timeB - timeA;
+    });
+    
+    console.log('[DEBUG] Total logs loaded:', logsCache.length, 'entries');
+    
+    // Check for stale data (no new logs in last 10 minutes - more lenient)
+    if(logsCache.length > 0){
+      const latestLog = logsCache[0]; // First entry is newest
+      if(latestLog && latestLog.timestamp){
+        const lastLogTime = parseTs(latestLog.timestamp);
+        const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
+        hasError = lastLogTime.getTime() < tenMinutesAgo;
+        console.log('[DEBUG] Latest log time:', latestLog.timestamp, 'hasError:', hasError);
+      }
+    }
+    
+    // Update header indicators per log type (2-minute freshness)
+    const nowMs = Date.now();
+    const fresh = (ts) => (nowMs - ts) < (2 * 60 * 1000);
+    const d2dFresh = latestByType.d2dlogs && fresh(latestByType.d2dlogs);
+    const filtFresh = latestByType.filteredlogs && fresh(latestByType.filteredlogs);
+    document.getElementById('d2d-indicator').textContent = d2dFresh ? '🟢' : (latestByType.d2dlogs ? '🟡' : '🔴');
+    document.getElementById('forwarder-indicator').textContent = filtFresh ? '🟢' : (latestByType.filteredlogs ? '🟡' : '🔴');
+    
+    renderLogs();
+    updateIndicators(hasError);
+    // Remove the main status text - we only show bot indicators now
+    // Update live console if open
+    if(document.getElementById('console-modal').classList.contains('show')){
+      renderConsole();
+    }
+    console.log('[DEBUG] loadLogs completed successfully');
+  }catch(e){
+    console.error('[ERROR] loadLogs failed:', e);
+    updateIndicators(true);
+    // Update bot status to offline if we can't fetch logs
+    document.getElementById('d2d-indicator').textContent = '🔴';
+    document.getElementById('forwarder-indicator').textContent = '🔴';
+  }
+}
+
+async function loadStatus(){
+  try{
+    const res = await fetch('/status?'+Date.now());
+    if(res.ok){
+      lastStatus = await res.json();
+      // Recompute indicators based on recency
+      const recent = (() => {
+        if(!lastStatus.latest_log_timestamp) return false;
+        const t = parseTs(lastStatus.latest_log_timestamp).getTime();
+        return Date.now() - t < 2 * 60 * 1000; // 2 minutes
+      })();
+      if(lastStatus.logs_exists && lastStatus.logs_count > 0 && recent){
+        document.getElementById('d2d-indicator').textContent = '🟢';
+        document.getElementById('forwarder-indicator').textContent = '🟢';
+        updateIndicators(false);
+      }else if(lastStatus.logs_exists){
+        document.getElementById('d2d-indicator').textContent = '🟡';
+        document.getElementById('forwarder-indicator').textContent = '🟡';
+      }else{
+        document.getElementById('d2d-indicator').textContent = '🔴';
+        document.getElementById('forwarder-indicator').textContent = '🔴';
+      }
+    }
+  }catch(e){
+    // ignore
+  }
+}
+
+function updateBotStatus(){
+  // Check if we can fetch logs (indicates HTTP server is running)
+  const httpServerRunning = logsCache !== null;
+  
+  if(!httpServerRunning){
+    document.getElementById('d2d-indicator').textContent = '🔴';
+    document.getElementById('forwarder-indicator').textContent = '🔴';
+    return;
+  }
+  
+  // Check for recent activity (last 5 minutes)
+  const now = Date.now();
+  const twoMinutesAgo = now - (2 * 60 * 1000);
+  
+  let hasRecentActivity = false;
+  if(logsCache.length > 0){
+    // logsCache is sorted newest first; use index 0
+    const newest = logsCache[0];
+    if(newest && newest.timestamp){
+      const newestTime = parseTs(newest.timestamp).getTime();
+      hasRecentActivity = newestTime > twoMinutesAgo;
+    }
+  }
+  
+  // Update indicators based on activity
+  if(hasRecentActivity){
+    document.getElementById('d2d-indicator').textContent = '🟢';
+    document.getElementById('forwarder-indicator').textContent = '🟢';
+  } else if(logsCache.length > 0){
+    document.getElementById('d2d-indicator').textContent = '🟡';
+    document.getElementById('forwarder-indicator').textContent = '🟡';
+  } else {
+    document.getElementById('d2d-indicator').textContent = '🔴';
+    document.getElementById('forwarder-indicator').textContent = '🔴';
+  }
+}
+
+function renderChannels(){
+  const list = document.getElementById('channel-list');
+  // Prefer destination-centric mapping if provided by server
+  if(channelMeta && Array.isArray(channelMeta.destinations) && channelMeta.destinations.length){
+    const cards = channelMeta.destinations.map(dest => {
+      const destId = dest.id ? String(dest.id) : '';
+      const destName = dest.name || (destId ? `# ${destId.slice(-6)}` : 'Webhook Target');
+      const sourcesHtml = (dest.sources || []).map(s => `
+        <div style="font-size:10px; color: var(--sub); display:flex; justify-content:space-between; align-items:center; gap:6px;">
+          <span>src: ${String(s.source_channel_id)}</span>
+          <span style="display:flex; align-items:center; gap:6px">
+            <a href="${s.webhook}" target="_blank" class="discord-link" style="font-size:10px" onclick="event.preventDefault(); testWebhook('${String(s.webhook).replace(/'/g, "\\'")}')">webhook</a>
+            <button class="edit-btn" style="padding:2px 6px; font-size:10px" onclick="editChannelMapping('${String(s.source_channel_id)}','${String(s.webhook).replace(/'/g, "\\'")}')">✏️ Edit</button>
+          </span>
+        </div>
+      `).join('');
+      return `
+        <div class="channel-item ${String(selectedChannelId)===destId?'active':''}" onclick="${destId?`selectChannel('${destId}')`:'void(0)'}">
+          <div class="channel-name"># ${destName}</div>
+          ${destId?`<div class="channel-id">${destId}</div>`:''}
+          <div style="margin-top:6px">${sourcesHtml}</div>
+        </div>
+      `;
+    }).join('');
+    list.innerHTML = cards || '<div class="empty">No channels</div>';
+    return;
+  }
+  // Fallback: server-provided categories
+  if(channelMeta && (channelMeta.categories || []).length){
+    const renderGroup = (title, items) => `
+      <div class="category">
+        <div class="category-title">${title}</div>
+        <div class="category-channels">
+          ${items.map(ch => `
+            <div class="channel-item ${String(selectedChannelId)===String(ch.id)?'active':''}" onclick="selectChannel('${ch.id}')">
+              <div class="channel-name"># ${ch.name}</div>
+              <div class="channel-id">${ch.id}${ch.in_map?'':' (not mapped)'}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+    const parts = [];
+    for(const cat of (channelMeta.categories||[])){
+      const items = (cat.channels||[]).filter(c => true);
+      if(items.length) parts.push(renderGroup(cat.name, items));
+    }
+    if((channelMeta.uncategorized||[]).length){
+      parts.push(renderGroup('Uncategorized', channelMeta.uncategorized));
+    }
+    list.innerHTML = parts.join('') || '<div class="empty">No channels</div>';
+    return;
+  }
+  // Fallback: synthesize categories from logs + channel_map
+  const merged = {...mapData, ...localAdds};
+  const idToName = {};
+  // Build name map from logs cache
+  (logsCache || []).forEach(l => {
+    if(l.source_channel_id){ idToName[String(l.source_channel_id)] = l.source_channel_name || idToName[String(l.source_channel_id)] || String(l.source_channel_id); }
+    if(l.dest_channel_id){ idToName[String(l.dest_channel_id)] = l.dest_channel_name || idToName[String(l.dest_channel_id)] || String(l.dest_channel_id); }
+  });
+  const allIds = new Set([...Object.keys(merged), ...Object.keys(idToName)]);
+  if(allIds.size === 0){ list.innerHTML = '<div class="empty">No channels</div>'; return; }
+  const mapped = [];
+  const unmapped = [];
+  Array.from(allIds).sort().forEach(id => {
+    const name = idToName[id] || `# ${id.slice(-6)}`;
+    const entry = `
+      <div class="channel-item ${String(selectedChannelId)===String(id)?'active':''}" onclick="selectChannel('${id}')">
+        <div class="channel-name">${name}</div>
+        <div class="channel-id">${id}</div>
+      </div>`;
+    if(merged[id]) mapped.push(entry); else unmapped.push(entry);
+  });
+  list.innerHTML = `
+    <div class="category">
+      <div class="category-title">Mapped</div>
+      <div class="category-channels">${mapped.join('') || '<div class="empty">None</div>'}</div>
+    </div>
+    <div class="category">
+      <div class="category-title">Unmapped</div>
+      <div class="category-channels">${unmapped.join('') || '<div class="empty">None</div>'}</div>
+    </div>`;
+}
+
+// Format timestamp string (YYYY-MM-DD HH:MM:SS) to 12-hour time
+function formatTime12(ts){
+  if(!ts) return '';
+  try{
+    // Expecting 'YYYY-MM-DD HH:MM:SS'
+    const timePart = String(ts).split(' ')[1] || ts;
+    const [hh, mm, ss] = (timePart || '').split(':');
+    if(hh === undefined) return ts;
+    let h = parseInt(hh, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if(h === 0) h = 12;
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${h}:${pad(mm||'0')}:${pad(ss||'0')} ${ampm}`;
+  }catch(e){ return ts; }
+}
+
+function selectChannel(channelId){
+  selectedChannelId = channelId;
+  renderChannels();
+  
+  const channelLogs = logsCache.filter(log => String(log.source_channel_id) === String(channelId)).slice(-50).reverse();
+  const preview = document.getElementById('preview');
+  const previewSearch = document.getElementById('preview-search');
+  
+  if(!channelLogs.length){
+    preview.innerHTML = '<div class="empty">No messages for this channel yet</div>';
+    previewSearch.style.display = 'none';
+    return;
+  }
+  
+  // Show search input
+  previewSearch.style.display = 'block';
+  
+  // Filter logs based on search (no limit - show all data with scrolling)
+  const filteredLogs = filterLogs(channelLogs, searchFilters.preview);
+  
+  // Display all filtered logs (no limit)
+  const displayLogs = filteredLogs;
+  
+  preview.innerHTML = displayLogs.map(log => `
+    <div class="preview-message">
+      <div class="preview-header">
+        <div class="preview-avatar"></div>
+        <div>
+          <div class="preview-user"># ${log.source_channel_name || log.source_channel_id}</div>
+          <div class="preview-time">${formatTime12(log.timestamp)}</div>
+        </div>
+      </div>
+      <div class="message-content">${(log.content || '[embed]').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    </div>
+  `).join('');
+}
+
+function filterLogs(logs, searchTerm){
+  if(!searchTerm) return logs;
+  const term = searchTerm.toLowerCase();
+  return logs.filter(log => 
+    (log.user && log.user.toLowerCase().includes(term)) ||
+    (log.content && log.content.toLowerCase().includes(term)) ||
+    (log.link_type && log.link_type.toLowerCase().includes(term))
+  );
+}
+
+function renderLogs(){
+  // Enrich name lookup from logs as last resort
+  try{
+    (logsCache||[]).forEach(l => {
+      if(l.source_channel_id && l.source_channel_name){ channelNameLookup[String(l.source_channel_id)] = l.source_channel_name; }
+      if(l.dest_channel_id && l.dest_channel_name){ channelNameLookup[String(l.dest_channel_id)] = l.dest_channel_name; }
+    });
+  }catch(e){/* ignore */}
+
+  const amazonLogs = logsCache.filter(l => l.link_type === 'AMAZON');
+  const mavelyLogs = logsCache.filter(l => l.link_type === 'MAVELY');
+  const upcomingLogs = logsCache.filter(l => l.link_type === 'UPCOMING');
+  const d2dLogs = logsCache.filter(l => (l.log_type || 'legacy') === 'd2dlogs');
+  const errorsLogs = logsCache.filter(l => {
+    const evt = (l.event || '').toLowerCase();
+    const hasErrorFlag = typeof l.success === 'boolean' && l.success === false;
+    const hasErrorField = !!l.error;
+    return evt === 'error' || hasErrorFlag || hasErrorField;
+  });
+  
+  // Apply search filters (no limit - show all data with scrolling)
+  const filteredAmazon = filterLogs(amazonLogs, searchFilters.amazon);
+  const filteredMavely = filterLogs(mavelyLogs, searchFilters.mavely);
+  const filteredUpcoming = filterLogs(upcomingLogs, searchFilters.upcoming);
+  const filteredD2D = filterLogs(d2dLogs, searchFilters.d2d);
+  const filteredErrors = filterLogs(errorsLogs, searchFilters.errors);
+
+  // Fallback: if a panel has no typed matches, show recent activity (newest first)
+  const fallbackRecent = (logsCache || []).slice(0, 50);
+  const amazonDisplay = filteredAmazon.length ? filteredAmazon : fallbackRecent;
+  const mavelyDisplay = filteredMavely.length ? filteredMavely : fallbackRecent;
+  const upcomingDisplay = filteredUpcoming.length ? filteredUpcoming : fallbackRecent;
+  const d2dDisplay = filteredD2D.length ? filteredD2D : fallbackRecent;
+  
+  renderMessageList('amazon-logs', amazonDisplay, filteredAmazon.length ? 'amazon' : 'all');
+  renderMessageList('mavely-logs', mavelyDisplay, filteredMavely.length ? 'mavely' : 'all');
+  renderMessageList('upcoming-logs', upcomingDisplay, filteredUpcoming.length ? 'upcoming' : 'all');
+  renderMessageList('d2d-logs', d2dDisplay, filteredD2D.length ? 'd2d' : 'all');
+  renderMessageList('errors-logs', filteredErrors, 'all');
+  
+  document.getElementById('amazon-count').textContent = amazonLogs.length;
+  document.getElementById('mavely-count').textContent = mavelyLogs.length;
+  document.getElementById('upcoming-count').textContent = upcomingLogs.length;
+  document.getElementById('d2d-count').textContent = d2dLogs.length;
+  document.getElementById('errors-count').textContent = errorsLogs.length;
+  
+  // Visual feedback on update
+  document.querySelectorAll('.panel-header').forEach(header => {
+    header.style.backgroundColor = 'rgba(35, 196, 131, 0.2)';
+    setTimeout(() => header.style.backgroundColor = '', 500);
+  });
+}
+
+function renderMessageList(elementId, logs, type){
+  const list = document.getElementById(elementId);
+  const logsDeduped = dedupeLogs(logs);
+  
+  // Always show search input if there are any logs in the cache
+  const firstSearchInput = list.querySelector('.panel-search');
+  if(firstSearchInput && logsCache.length > 0){
+    firstSearchInput.style.display = 'block';
+  }
+  
+  if(!logsDeduped.length){
+    // Only show empty if there are no messages at all
+    if(!list.querySelector('.message-entry')){
+      return; // Keep existing empty state
+    }
+    return;
+  }
+  
+  // Clear messages but preserve search input
+  const existingSearchInput = list.querySelector('.panel-search');
+  const searchInputHTML = existingSearchInput ? existingSearchInput.outerHTML : '';
+  
+  const resolveName = (id, fallback) => {
+    if(!id && fallback) return fallback;
+    if(id && channelNameLookup[String(id)]) return channelNameLookup[String(id)];
+    if(fallback) return fallback;
+    if(id) return `# ${String(id).slice(-6)}`;
+    return 'Unknown';
+  };
+
+  list.innerHTML = searchInputHTML + logsDeduped.map(log => {
+    // Check if this is an @everyone ping message
+    const isEveryonePing = log.content && (
+      log.content.includes('@everyone') || 
+      log.content.includes('@here') ||
+      log.event === 'everyone_ping'
+    );
+    
+    const messageClass = `${type}${isEveryonePing ? ' everyone-ping' : ''}`;
+    const sirenIcon = isEveryonePing ? '<span class="siren">🚨</span>' : '';
+    
+    const srcLabel = resolveName(log.source_channel_id, log.source_channel_name || 'Source');
+    const destLabel = resolveName(log.dest_channel_id, log.dest_channel_name || 'Unknown');
+    const logType = log.log_type || 'legacy';
+    
+    // Color code by log type
+    const typeColors = {
+      'filteredlogs': '#35c483',  // Amazon/Mavely/Upcoming filtered messages
+      'd2dlogs': '#5865f2',       // D2D bridge webhook forwarding
+      'botlogs': '#faa61a',       // Bot startup/status/terminal logs
+      'logs': '#747f8d',          // Legacy logs
+      'legacy': '#747f8d'
+    };
+    const typeColor = typeColors[logType] || '#747f8d';
+    
+    // Make Discord message links clickable
+    let content = (log.summary || log.content || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    
+    // Convert Discord message links to clickable links
+    content = content.replace(/(https:\/\/discord\.com\/channels\/\d+\/\d+\/\d+)/g, '<a href="$1" target="_blank" class="discord-link">$1</a>');
+    
+    // Convert channel mentions to clickable links
+    content = content.replace(/<#(\d+)>/g, '<a href="https://discord.com/channels/' + (log.guild_id || '') + '/$1" target="_blank" class="discord-link">#$1</a>');
+    
+    // Convert user mentions to clickable links
+    content = content.replace(/<@!?(\d+)>/g, '<a href="https://discord.com/users/$1" target="_blank" class="discord-link">@$1</a>');
+    
+    // Add Discord link if available
+    let discordLinkHtml = '';
+    if(log.discord_link){
+      discordLinkHtml = `<a href="${log.discord_link}" target="_blank" class="discord-link" style="margin-left:8px; font-size:10px">🔗 View Message</a>`;
+    }
+    
+    // Summary line for any type (small font), keep full content clickable below
+    let summaryHtml = '';
+    if (log.summary) {
+      const text = String(log.summary || '').replace(/\s+/g,' ').trim();
+      const snippet = text.length > 200 ? text.slice(0,200) + '…' : text;
+      summaryHtml = `<div style="font-size:10px; color:var(--sub); margin-top:4px">${snippet}</div>`;
+    }
+
+    return `
+      <div class="message-entry ${messageClass}">
+        <div class="message-meta">
+          ${sirenIcon}
+          <span class="badge badge-${(log.link_type||'LOG').toLowerCase()}">${log.link_type || 'LOG'}</span>
+          <span class="log-type-indicator" style="color: ${typeColor}; font-size: 10px; opacity: 0.7">[${logType}]</span>
+          <span>${srcLabel}</span>
+          <span style="color:var(--sub)">→</span>
+          <span style="color:#57F287">${destLabel}</span>
+          <span style="margin-left:auto; font-size:10px">${formatTime12(log.timestamp)}</span>
+          ${discordLinkHtml}
+        </div>
+        ${summaryHtml}
+        <div class="message-content">${content}</div>
+      </div>
+    `;
+  }).join('');
+  // Snap to latest (scroll to bottom)
+  try{ list.scrollTop = list.scrollHeight; }catch(e){}
+}
+
+function toggleSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  sidebarCollapsed = !sidebarCollapsed;
+  sidebar.style.display = sidebarCollapsed ? 'none' : 'flex';
+  document.querySelector('.main-container').style.gridTemplateColumns = sidebarCollapsed ? '1fr' : '300px 1fr';
+}
+
+function togglePanel(panelHeader){
+  const panelBody = panelHeader.nextElementSibling;
+  
+  if(panelBody.classList.contains('collapsed')){
+    panelBody.classList.remove('collapsed');
+    panelHeader.classList.remove('collapsed');
+  } else {
+    panelBody.classList.add('collapsed');
+    panelHeader.classList.add('collapsed');
+  }
+}
+
+function showAddModal(){
+  document.getElementById('add-modal').classList.add('show');
+}
+
+function hideAddModal(){
+  document.getElementById('add-modal').classList.remove('show');
+  document.getElementById('input-channel-id').value = '';
+  document.getElementById('input-webhook').value = '';
+}
+
+async function addChannel(){
+  const channelId = document.getElementById('input-channel-id').value.trim();
+  const webhook = document.getElementById('input-webhook').value.trim();
+  
+  if(!/^\d{8,}$/.test(channelId)){alert('Invalid Channel ID'); return;}
+  if(!/^https?:\/\/discord\.com\/api\/webhooks\//i.test(webhook)){alert('Invalid Webhook URL'); return;}
+  
+  // Add to local memory
+  localAdds[channelId] = webhook;
+  
+  // Save to server
+  try {
+    const merged = {...mapData, ...localAdds};
+    const response = await fetch('/save_channel_map', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(merged)
+    });
+    
+    if(response.ok){
+      // Update mapData to reflect the saved changes
+      mapData = merged;
+      localAdds = {};
+      renderChannels();
+      hideAddModal();
+      alert('Channel added successfully!');
+    } else {
+      alert('Failed to save channel map');
+    }
+  } catch(e) {
+    alert('Error saving channel map: ' + e.message);
+  }
+}
+
+function downloadMap(){
+  const merged = {...mapData, ...localAdds};
+  const blob = new Blob([JSON.stringify(merged, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'channel_map.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function shutdownSystem(){
+  if(!confirm('⚠️ Shutdown all bots and servers?\n\nThis will stop:\n- All bot processes\n- HTTP server\n\nAre you sure?')){
+    return;
+  }
+  
+  // Shutdown initiated
+  
+  try{
+    // Call shutdown endpoint
+    const res = await fetch('/shutdown', {method: 'POST'});
+    if(res.ok){
+      alert('✅ System shutdown initiated\n\nThe dashboard will close in 5 seconds.');
+      setTimeout(() => window.close(), 5000);
+    }else{
+      throw new Error('Shutdown failed');
+    }
+  }catch(e){
+    alert('❌ Could not shutdown cleanly.\n\nPlease manually stop the processes:\n\nOn Windows: Run RUN.vbs again\nOn Linux: Ctrl+C in terminal');
+  }
+}
+
+function updateIndicators(hasError){
+  const indicators = document.querySelectorAll('.live-indicator');
+  
+  indicators.forEach(indicator => {
+    if(hasError){
+      indicator.classList.remove('normal', 'warning');
+      indicator.classList.add('error');
+    }else{
+      indicator.classList.remove('error', 'warning');
+      indicator.classList.add('normal');
+    }
+  });
+  
+  // Note: error-btn element doesn't exist in current HTML, so we skip that part
+}
+
+function showErrorDetails(){
+  const logs = logsCache || [];
+  const recentLogs = logs.slice(-50); // Last 50 logs
+  
+  let errorInfo = `System Status: ${logsCache ? 'Connected' : 'Disconnected'}\n`;
+  errorInfo += `Total Logs: ${logs.length}\n`;
+  errorInfo += `Recent Logs (Last 50):\n\n`;
+  
+  if(recentLogs.length === 0){
+    errorInfo += 'No logs available.\n\n';
+    errorInfo += 'Possible issues:\n';
+    errorInfo += '- Bots are not running\n';
+    errorInfo += '- No messages received yet\n';
+    errorInfo += '- logs.json file is missing or empty';
+  }else{
+    const latestLog = recentLogs[recentLogs.length - 1];
+    if(latestLog && latestLog.timestamp){
+      const lastLogTime = new Date(latestLog.timestamp);
+      const now = Date.now();
+      const timeDiff = now - lastLogTime.getTime();
+      const minutesAgo = Math.floor(timeDiff / (1000 * 60));
+      
+      errorInfo += `Last Activity: ${minutesAgo} minute(s) ago\n`;
+      errorInfo += `Last Log Timestamp: ${latestLog.timestamp}\n\n`;
+      
+             if(minutesAgo > 2){
+         errorInfo += '⚠️ No recent activity detected.\n';
+         errorInfo += 'Possible causes:\n';
+         errorInfo += '- Source channels have no new messages\n';
+         errorInfo += '- Bots may be disconnected\n';
+         errorInfo += '- Check if bots are running\n\n';
+         errorInfo += '⚠️ Bot Status:\n';
+         const d2dStatus = document.getElementById('d2d-indicator').textContent;
+         const forwarderStatus = document.getElementById('forwarder-indicator').textContent;
+         errorInfo += `- D2D Bot: ${d2dStatus === '🟢' ? 'Connected' : d2dStatus === '🟡' ? 'No Recent Activity' : 'Offline'}\n`;
+         errorInfo += `- Ping & Filter Bot: ${forwarderStatus === '🟢' ? 'Connected' : forwarderStatus === '🟡' ? 'No Recent Activity' : 'Offline'}\n\n`;
+         errorInfo += 'Troubleshooting:\n';
+         errorInfo += '1. Check if all bots are running in background\n';
+         errorInfo += '2. Verify Discord token is valid\n';
+         errorInfo += '3. Check source channels for new messages\n';
+         errorInfo += '4. Restart the system if problems persist\n\n';
+       }
+      
+      errorInfo += 'Recent Activity:\n';
+      errorInfo += '─'.repeat(50) + '\n';
+      recentLogs.slice(-20).reverse().forEach((log, i) => {
+        errorInfo += `${String(recentLogs.length - i).padStart(3)}. [${log.timestamp || 'N/A'}] `;
+        errorInfo += `User: ${log.user || 'Unknown'}, `;
+        errorInfo += `Type: ${log.link_type || 'N/A'}\n`;
+      });
+    }
+  }
+  
+  document.getElementById('error-content').textContent = errorInfo;
+  document.getElementById('error-modal').classList.add('show');
+}
+
+function hideErrorModal(){
+  document.getElementById('error-modal').classList.remove('show');
+}
+
+function showConsole(filterType='all'){
+  currentConsoleFilterType = filterType || 'all';
+  renderConsole();
+  document.getElementById('console-modal').classList.add('show');
+}
+
+function hideConsole(){
+  document.getElementById('console-modal').classList.remove('show');
+}
+
+function renderConsole(){
+  const logs = logsCache || [];
+  const filtered = (currentConsoleFilterType === 'all' ? logs : logs.filter(l => (l.log_type || 'legacy') === currentConsoleFilterType))
+    .filter(l => (l.event || '').toLowerCase() !== 'message_detected'); // hide noisy detects
+  const deduped = dedupeLogs(filtered);
+  // Sort ascending so newest is at the bottom
+  const asc = deduped.slice().sort((a,b) => {
+    const ta = new Date(a.timestamp || 0).getTime();
+    const tb = new Date(b.timestamp || 0).getTime();
+    return ta - tb;
+  });
+  const display = asc.slice(-200);
+  const lines = display.map((log, idx) => {
+    const t = formatTime12(log.timestamp || '');
+    const evt = (log.summary ? (log.link_type || 'LOG') : (log.event || log.link_type || 'LOG'));
+    const src = log.source_channel_name || log.source_channel_id || '';
+    const dest = log.dest_channel_name || log.dest_channel_id || '';
+    const content = (log.summary || log.content || '').replace(/\s+/g,' ').trim();
+    return `${String(Math.max(0, asc.length - 200) + idx).padStart(4,' ')} | ${t} | ${evt} | ${src} -> ${dest} | ${content}`;
+  }).join('\n');
+  const el = document.getElementById('console-content');
+  el.textContent = lines || 'No logs yet...';
+  el.scrollTop = el.scrollHeight;
+}
+
+async function copyConsole(){
+  try{
+    const text = document.getElementById('console-content').textContent || '';
+    await navigator.clipboard.writeText(text);
+    alert('Copied logs to clipboard.');
+  }catch(e){
+    alert('Copy failed.');
+  }
+}
+
+// ===== Fetch Recent (client-side only, no sending) =====
+function computeRecentByChannel(){
+  const buckets = {}; // channelId -> { name, items: [], seenIds: Set }
+  const logs = logsCache || [];
+  for(let i = logs.length - 1; i >= 0; i--){
+    const log = logs[i];
+    const chId = log.source_channel_id;
+    if(!chId) continue;
+    const evt = log.event || '';
+    // Only consider logs that represent actual messages
+    if(!(evt === 'filter_classify' || evt === 'webhook_forward' || log.link_type)) continue;
+    const msgId = log.message_id || `${(log.content||'').slice(0,50)}-${i}`;
+    if(!buckets[chId]) buckets[chId] = { name: log.source_channel_name || chId, items: [], seenIds: new Set() };
+    const bucket = buckets[chId];
+    if(bucket.items.length >= 5) continue; // already have 5
+    if(bucket.seenIds.has(msgId)) continue; // dedupe per channel
+    bucket.seenIds.add(msgId);
+    bucket.items.push(log);
+  }
+  return buckets;
+}
+
+function dedupeLogs(arr){
+  try{
+    const seen = new Set();
+    const out = [];
+    for(const l of arr||[]){
+      const sig = [l.message_id, l.event, l.link_type, l.source_channel_id, l.dest_channel_id, (l.summary||l.content||'').slice(0,80)].join('|');
+      if(!seen.has(sig)){
+        seen.add(sig);
+        out.push(l);
+      }
+    }
+    return out;
+  }catch(e){ return arr||[]; }
+}
+
+function escHtml(s){ return String(s || '').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderFetchRecent(){
+  const buckets = computeRecentByChannel();
+  const channelIds = Object.keys(buckets);
+  if(channelIds.length === 0){
+    document.getElementById('fetch-content').innerHTML = '<div class="empty">No messages found in logs.</div>';
+    return;
+  }
+  const sections = channelIds.sort().map(chId => {
+    const {name, items} = buckets[chId];
+    const rows = items.map(l => `
+      <div class="message-entry" style="margin:6px 0">
+        <div class="message-meta">
+          <span class="badge badge-${(l.link_type||'all').toLowerCase()}">${escHtml(l.link_type || 'LOG')}</span>
+          <span>${escHtml(name)} (${escHtml(chId)})</span>
+          <span style="color:var(--sub)">→</span>
+          <span style="color:#57F287">${escHtml(l.dest_channel_name || l.dest_channel_id || '')}</span>
+          <span style="margin-left:auto; font-size:10px">${escHtml(formatTime12(l.timestamp))}</span>
+        </div>
+        <div class="message-content">${escHtml(l.content || '[embed]')}</div>
+      </div>
+    `).join('');
+    return `
+      <div style="border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:10px; background:var(--panel)">
+        <div style="font-weight:700; margin-bottom:6px"># ${escHtml(name)} <span style="color:var(--sub); font-weight:400">(${escHtml(chId)})</span></div>
+        ${rows || '<div class="empty">No recent unique messages</div>'}
+      </div>
+    `;
+  }).join('');
+  document.getElementById('fetch-content').innerHTML = sections;
+}
+
+function showFetchRecent(){
+  renderFetchRecent();
+  document.getElementById('fetch-modal').classList.add('show');
+}
+
+function hideFetchRecent(){
+  document.getElementById('fetch-modal').classList.remove('show');
+}
+
+// Initialize
+async function pullRecentToLogs(){
+  try{
+    const res = await fetch('/pull_recent?limit=5');
+    if(res.ok){
+      const data = await res.json().catch(() => ({}));
+      // Refresh logs so user can see pulled entries
+      await loadLogs();
+      alert(`Added ${data.written ?? 0} preview entries to logs.`);
+    }else{
+      alert('Failed to pull recent messages.');
+    }
+  }catch(e){
+    alert('Failed to pull recent messages.');
+  }
+}
+
+// Check if we're running through HTTP server
+if (window.location.protocol === 'file:') {
+  console.error('[ERROR] Dashboard must be accessed through HTTP server!');
+  console.error('[ERROR] Please open: http://localhost:8080/dashboard.html');
+  
+  // Try to automatically redirect to HTTP server
+  console.log('[DEBUG] Attempting to redirect to HTTP server...');
+  setTimeout(() => {
+    window.location.href = 'http://localhost:8080/dashboard.html';
+  }, 2000);
+  
+  document.body.innerHTML = `
+    <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+      <h1 style="color: #ed4245;">❌ Dashboard Access Error</h1>
+      <p>This dashboard must be accessed through the HTTP server.</p>
+      <p>Redirecting to: <a href="http://localhost:8080/dashboard.html" style="color: #5865f2;">http://localhost:8080/dashboard.html</a></p>
+      <p>If redirect doesn't work, please manually open the link above.</p>
+      <p>Make sure the HTTP server is running on port 8080.</p>
+      <div style="margin-top: 20px; padding: 10px; background: #1a1d25; border-radius: 8px;">
+        <p style="color: #9ca3af; font-size: 12px;">Auto-redirecting in 2 seconds...</p>
+      </div>
+    </div>
+  `;
+} else {
+  console.log('[DEBUG] Dashboard accessed through HTTP server:', window.location.href);
+  console.log('[DEBUG] Starting dashboard initialization...');
+  
+  // Test HTTP server connectivity first
+  fetch('/status')
+    .then(response => {
+      console.log('[DEBUG] HTTP server status check:', response.status);
+      if (response.ok) {
+        console.log('[DEBUG] HTTP server is ready, loading dashboard...');
+        loadAll();
+        initializePanels();
+      } else {
+        console.error('[ERROR] HTTP server not ready, status:', response.status);
+        document.body.innerHTML = `
+          <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+            <h1 style="color: #ed4245;">❌ HTTP Server Not Ready</h1>
+            <p>Status: ${response.status}</p>
+            <p>Please wait for the HTTP server to start and refresh the page.</p>
+            <button onclick="location.reload()" style="padding: 10px 20px; background: #5865f2; color: white; border: none; border-radius: 5px; cursor: pointer;">Refresh Page</button>
+          </div>
+        `;
+      }
+    })
+    .catch(error => {
+      console.error('[ERROR] Failed to connect to HTTP server:', error);
+      document.body.innerHTML = `
+        <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+          <h1 style="color: #ed4245;">❌ Cannot Connect to HTTP Server</h1>
+          <p>Error: ${error.message}</p>
+          <p>Please make sure the HTTP server is running on port 8080.</p>
+          <button onclick="location.reload()" style="padding: 10px 20px; background: #5865f2; color: white; border: none; border-radius: 5px; cursor: pointer;">Retry</button>
+        </div>
+      `;
+    });
+  
+  // Enable automatic refresh for live updates (single interval)
+  if (!autoRefreshTimer) {
+    autoRefreshTimer = setInterval(() => { loadAll(); }, AUTO_REFRESH_MS);
+  }
+}
+
+function initializePanels(){
+  // Initialize all panels as expanded by default
+  document.querySelectorAll('.panel-header').forEach(header => {
+    const panelBody = header.nextElementSibling;
+    
+    // Ensure panels start expanded
+    panelBody.classList.remove('collapsed');
+    header.classList.remove('collapsed');
+  });
+}
+
+// Add search event listeners
+document.getElementById('amazon-search').addEventListener('input', (e) => {
+  searchFilters.amazon = e.target.value;
+  renderLogs();
+});
+
+document.getElementById('mavely-search').addEventListener('input', (e) => {
+  searchFilters.mavely = e.target.value;
+  renderLogs();
+});
+
+document.getElementById('upcoming-search').addEventListener('input', (e) => {
+  searchFilters.upcoming = e.target.value;
+  renderLogs();
+});
+
+// New searches for D2D and Errors panels
+document.getElementById('d2d-search').addEventListener('input', (e) => {
+  searchFilters.d2d = e.target.value;
+  renderLogs();
+});
+document.getElementById('errors-search').addEventListener('input', (e) => {
+  searchFilters.errors = e.target.value;
+  renderLogs();
+});
+
+const psearch = document.getElementById('preview-search');
+if(psearch){
+  psearch.addEventListener('input', (e) => {
+    searchFilters.preview = e.target.value;
+    if(selectedChannelId) {
+      selectChannel(selectedChannelId);
+    }
+  });
+}
+
+// Legacy bot console functions removed. Live Logs modal uses aggregated logsCache instead.
+
+// ESC to close modals
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){
+    hideAddModal();
+    hideErrorModal();
+    hideFetchRecent();
+    hideConsole();
+    hideSetupStatus();
+    // Channel Map modals
+    if(typeof hideAddChannelModal !== 'undefined') hideAddChannelModal();
+    if(typeof hideEditChannelModal !== 'undefined') hideEditChannelModal();
+    if(typeof hideImportChannelModal !== 'undefined') hideImportChannelModal();
+  }
+});
+
+// Cleanup: ensure single timer cleared on unload
+window.addEventListener('beforeunload', () => {
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+});
+</script>
+
+<!-- Channel Map UI Script -->
+<script src="script.js"></script>
+
+</body>
+</html>

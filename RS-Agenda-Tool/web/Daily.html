@@ -1,0 +1,1496 @@
+<!-- ================= RS Dashboard: Agenda & Leads (Merged Single-File) ================= -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reselling Secrets – Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>">
+
+<!-- ================= Global Styles ================= -->
+<style>
+:root{
+  --bg:#0b0e11; --panel:#2b2d31; --msg:#313338; --muted:#3f4147;
+  --border:#202225; --text:#f2f3f5; --sub:#b5bac1;
+  --accent:#5865f2; --mention:#5865f2; --mention-bg:#3a3f73;
+  --code-bg:#1e1f22; --shadow:0 8px 24px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font:14px/1.45 "gg sans","Segoe UI",Arial,sans-serif;
+}
+a{color:var(--accent); text-decoration:none}
+a:hover{text-decoration:underline}
+button{
+  border:1px solid var(--border); background:var(--msg); color:var(--text);
+  border-radius:8px; padding:8px 12px; cursor:pointer; transition:.15s;
+}
+button:hover{background:var(--muted)}
+button.primary{background:#2d4b4b; border-color:#1a3c3a}
+.small{font-size:12px; color:var(--sub)}
+.hidden{display:none !important}
+
+/* Top nav */
+.main-header{
+  position:sticky; top:0; z-index:50;
+  background:linear-gradient(0deg, rgba(11,14,17,0.9), rgba(11,14,17,0.9));
+  backdrop-filter:saturate(140%) blur(6px);
+  border-bottom:1px solid var(--border);
+}
+.main-header__wrap{
+  max-width:1400px; margin:0 auto; padding:10px 16px;
+  display:flex; align-items:center; gap:10px; justify-content:space-between;
+}
+.brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.3px}
+.brand .dot{width:8px; height:8px; border-radius:50%; background:#23c483; box-shadow:0 0 10px #23c483}
+.nav{display:flex; align-items:center; gap:8px}
+.nav-btn{
+  padding:8px 12px; border-radius:8px; border:1px solid var(--border);
+  background:var(--msg); font-weight:700;
+}
+.nav-btn.active{outline:2px solid #2d4b4b}
+
+/* Containers */
+.container{max-width:1400px; margin:16px auto; padding:0 16px}
+.page{display:none}
+.page.visible{display:block}
+
+/* Agenda layout */
+.agenda-container{display:grid; grid-template-columns:320px 1fr 320px; gap:14px}
+@media(max-width:1150px){.agenda-container{grid-template-columns:1fr}}
+.category-block,.center-card,.tool-card{
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:12px; box-shadow:var(--shadow);
+}
+.category-header{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 14px; border-bottom:1px solid var(--border); font-weight:700;
+}
+.channel-list{padding:10px; display:flex; flex-direction:column; gap:8px}
+.channel{background:var(--msg); padding:8px 10px; border-radius:8px; cursor:pointer}
+.channel:hover{background:#3a3d45}
+.center-card,.tool-card{padding:14px}
+.agenda-center{display:flex; flex-direction:column; gap:12px}
+
+/* Text areas & live preview */
+.agenda-textbox{
+  width:100%; min-height:420px; background:var(--msg);
+  border:1px solid var(--border); border-radius:8px;
+  color:var(--text); padding:12px; resize:vertical;
+  font-family:ui-monospace,Consolas,monospace;
+}
+.preview-msg{
+  background:var(--msg); border-radius:10px; padding:12px 14px; margin-top:10px;
+  line-height:1.45; box-shadow:0 0 8px rgba(0,0,0,0.3);
+}
+.preview-msg h1,.preview-msg h2,.preview-msg h3{color:#fff; font-weight:700; margin:6px 0}
+.preview-msg h1{font-size:16px; color:#f2f3f5}
+.preview-msg h3{font-size:13px; color:var(--sub)}
+.preview-msg .mention{background:var(--mention-bg); color:var(--mention); padding:2px 5px; border-radius:4px; font-weight:600}
+.preview-msg a{color:var(--accent)} .preview-msg a:hover{text-decoration:underline}
+.preview-msg pre,.preview-msg code{background:var(--code-bg); border-radius:6px; font-family:Consolas,monospace; font-size:13px}
+.preview-msg pre{padding:8px; margin:8px 0; overflow-x:auto}
+.preview-msg code{padding:2px 5px}
+.preview-msg img.emoji{width:22px; height:22px; vertical-align:text-bottom}
+
+/* Tool panels */
+.gpt-panel{margin-top:12px; padding:12px}
+.gpt-head{display:flex; gap:10px; align-items:center; margin-bottom:10px}
+.gpt-head .tag{font-weight:800; font-size:13px; letter-spacing:.3px; background:#22252a; border:1px solid var(--border); padding:6px 8px; border-radius:8px}
+.gpt-controls{display:flex; flex-wrap:wrap; gap:10px}
+/* Dark inputs everywhere in tool panels */
+.gpt-controls select,
+.gpt-controls input,
+.gpt-controls textarea{
+  height:38px; border-radius:8px; border:1px solid var(--border);
+  background:var(--msg); color:var(--text); padding:8px 10px;
+}
+/* Textareas: taller by default and auto-grow controlled via JS */
+.gpt-controls textarea{ height:auto; min-height:48px; resize:none; line-height:1.35; font-family:ui-monospace,Consolas,monospace }
+.gpt-run{margin-left:auto}
+.gpt-output{margin-top:10px; background:var(--msg); border:1px dashed #3a3d45; border-radius:10px; padding:10px; min-height:90px; max-height:360px; overflow:auto; white-space:pre-wrap}
+.gpt-note{font-size:12px; color:var(--sub)}
+.gpt-small{font-size:11px; color:var(--sub)}
+
+/* Modals */
+#channel-modal{display:none; opacity:0; pointer-events:none; transition:opacity .2s ease}
+#channel-modal:not(.hidden){display:flex; opacity:1; pointer-events:auto}
+.vb-modal{position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:9999}
+.vb-modal__content{background:var(--panel); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:20px; width:420px; max-width:92%}
+.vb-modal__title{font-size:16px; font-weight:700; margin-bottom:14px; text-align:center}
+.vb-field{display:flex; flex-direction:column; margin-bottom:12px}
+.vb-field label{margin-bottom:4px; font-weight:600}
+.vb-field input, .vb-field select{height:36px; border-radius:8px; border:1px solid var(--border); background:var(--msg); color:var(--text); padding:0 10px}
+.vb-modal__actions{display:flex; justify-content:flex-end; gap:10px; margin-top:16px}
+
+/* Leads page */
+.leads-grid{display:grid; grid-template-columns:repeat(12, 1fr); gap:12px; position:relative}
+.panel-tile{grid-column:span 12; background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px; box-shadow:var(--shadow); position:relative}
+@media(min-width:900px){ .panel-tile{grid-column:span 6} }
+.panel-title{display:flex; justify-content:space-between; align-items:center; font-weight:700; padding-bottom:8px; border-bottom:1px solid var(--border)}
+.panel-body{padding-top:10px}
+.status-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; background:#b5bac1}
+.status-ok{background:#23c483}
+.status-bad{background:#ed4245}
+
+/* Resizable panels (default for all major blocks) */
+.category-block, .center-card, .tool-card, .gpt-panel{ resize: both; overflow: auto; min-width: 220px; min-height: 120px }
+/* Use custom resize handle for tiles to avoid browser-native glitches */
+.panel-tile{ resize: none; min-width: 260px; min-height: 140px; }
+.panel-title{ cursor: move }
+.resize-handle{
+  position:absolute; right:6px; bottom:6px; width:18px; height:18px;
+  border-right:3px solid rgba(255,255,255,.25); border-bottom:3px solid rgba(255,255,255,.25);
+  cursor:nwse-resize; opacity:.9
+}
+.panel-tile.dragging{ opacity:.85; outline:2px dashed rgba(255,255,255,.2) }
+
+/* Panel chooser preview tiles */
+.panel-choices{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:10px}
+.panel-choice{
+  border:1px dashed rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.03);
+  border-radius:10px; padding:10px; cursor:pointer; text-align:center;
+  transition:transform .08s ease, border-color .2s ease, background .2s ease
+}
+.panel-choice:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.05) }
+.panel-choice .title{ font-weight:700 }
+
+/* Amazon visuals */
+.split-2{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start}
+@media(max-width:950px){.split-2{grid-template-columns:1fr}}
+#amz-output{max-height:420px; overflow:auto; white-space:pre-wrap; word-break:break-word; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+#amzPriceLine{color:#57f287; font-weight:700}
+#amzListLine{color:#b9bbbe}
+#amzSaveLine{color:#f1c40f}
+#amzCoupon{color:#43b581; font-weight:600}
+#amzStock{color:#ed4245; font-weight:600}
+
+/* Ping panel UI tweaks */
+.ping-row{ display:flex; gap:8px; align-items:center; }
+.ping-select{ width:100%; max-width:100%; font-size:13px; }
+.ping-role{ min-width:170px; }
+.ping-msg{ flex:1; }
+.ping-select { height:36px; }
+/* Compact grid: label | offset | content */
+.ping-grid{ display:grid; grid-template-columns:80px 72px 1fr; gap:10px; align-items:start }
+.ping-live-grid{ display:grid; grid-template-columns:100px 1fr; gap:10px; align-items:start }
+/* Small numeric offset input */
+.offset-input{ width:6.5ch; text-align:right; }
+/* Auto-growing textarea visual cap */
+.auto-grow{ overflow-y:auto; max-height:260px }
+@media (max-width: 900px){
+  .ping-grid{ grid-template-columns:1fr; }
+  .ping-live-grid{ grid-template-columns:1fr; }
+}
+
+
+</style>
+<!-- ================= End Styles ================= -->
+</head>
+
+<body>
+<!-- ================= Top Navigation ================= -->
+<header class="main-header">
+  <div class="main-header__wrap">
+    <div class="brand">
+      <span class="dot"></span>
+      <span>RS Dashboard</span>
+    </div>
+    <nav class="nav">
+      <button id="nav-agenda" class="nav-btn active" type="button">Agenda</button>
+      <button id="nav-leads" class="nav-btn" type="button">Leads</button>
+    </nav>
+    <div class="nav" aria-label="Global actions">
+      <button id="btn-load" type="button">Load</button>
+      <button id="btn-save" type="button">Save</button>
+      <button id="btn-generate" class="primary" type="button">Generate</button>
+      <button id="btn-copy" type="button">Copy</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <!-- ================= Page – Agenda ================= -->
+  <section id="page-agenda" class="page visible" aria-labelledby="agenda-title">
+    <div class="category-block" style="margin-bottom:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+      <div id="agenda-title" style="font-weight:800">Agenda, Discord Pull, and Channel Maps</div>
+      <div class="right" style="display:flex; gap:8px"></div>
+    </div>
+
+    <main class="agenda-container">
+      <!-- LEFT -->
+      <aside>
+        <section class="category-block">
+          <div class="category-header">
+            <span>DAILY SCHEDULE</span>
+            <button class="add-btn" data-target="daily" type="button">+</button>
+          </div>
+          <div class="channel-list" id="daily-channel-list"></div>
+        </section>
+
+        <section class="category-block" style="margin-top:12px">
+          <div class="category-header">
+            <span>IN-STORE IMPORTANT</span>
+            <button class="add-btn" data-target="instore" type="button">+</button>
+          </div>
+          <div class="channel-list" id="instore-channel-list"></div>
+        </section>
+
+        <section class="category-block" style="margin-top:12px">
+          <div class="category-header">
+            <span>WEEKLY / UPCOMING</span>
+            <button class="add-btn" data-target="upcoming" type="button">+</button>
+          </div>
+          <div class="channel-list" id="upcoming-channel-list"></div>
+        </section>
+
+<section class="category-block" style="margin-top:12px">
+  <div class="category-header">
+    <span>OPTIONAL CHANNELS</span>
+    <button class="add-btn" data-target="optional" type="button">+</button>
+  </div>
+  <div class="channel-list" id="optional-channel-list"></div>
+</section>
+
+      </aside>
+
+      <!-- CENTER -->
+      <section class="agenda-center">
+        <div class="center-card">
+          <h1 style="margin:0 0 8px 0">Agenda Writeup</h1>
+          <textarea id="agenda-output" class="agenda-textbox" placeholder="Start writing your daily agenda here..."></textarea>
+          <div class="agenda-controls" style="margin-top:10px; display:flex; gap:8px; align-items:center">
+            <button id="btn-clear" type="button">Clear</button>
+            <span class="small">Tip: click a channel to remove it.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <aside>
+        <!-- GPT Panel -->
+        <section class="gpt-panel" id="gpt5-panel">
+          <div class="gpt-head">
+            <span class="tag">ChatGPT-5 Tools</span>
+            <span id="gpt-status" class="gpt-small">⚪ Idle</span>
+          </div>
+          <div class="gpt-controls">
+            <select id="gpt-mode" title="Select a function">
+              <option value="summary">Agenda Summary, quick one-liner</option>
+              <option value="proofread">Proofread or Rephrase channel labels</option>
+            </select>
+            <input id="gpt-apikey" type="password" placeholder="Paste OpenAI API Key" aria-label="OpenAI API Key" />
+            <button id="gpt-run" class="gpt-run" type="button">Run GPT-5</button>
+          </div>
+          <div class="gpt-output" id="gpt-output" aria-live="polite"></div>
+          <div class="gpt-note">Results are display only — copy by hand.</div>
+        </section>
+
+        <!-- Discord Tool -->
+        <section class="gpt-panel" id="discord-panel">
+          <div class="gpt-head">
+            <span class="tag">Discord Tool</span>
+            <span id="discord-status" class="gpt-small">⚪ Idle</span>
+          </div>
+          <div class="gpt-controls">
+            <button id="discord-pull" class="gpt-run" type="button">Pull Channels</button>
+          </div>
+          <div class="gpt-output" id="discord-output" aria-live="polite"></div>
+        </section>
+
+      </aside>
+    </main>
+
+    <!-- Add Channel Modal -->
+    <div id="channel-modal" class="vb-modal hidden" role="dialog" aria-modal="true" aria-labelledby="channel-modal-title">
+      <div class="vb-modal__content">
+        <div class="vb-modal__title" id="channel-modal-title">Add Channel</div>
+        <div class="vb-field"><label for="channel-id-input">Channel ID</label><input id="channel-id-input" type="text" placeholder="1430207105192689664" /></div>
+        <div class="vb-field"><label for="channel-name-input">Channel Name</label><input id="channel-name-input" type="text" placeholder="10-27│2025-casio-back-tothe-future" /></div>
+        <div class="vb-field"><label for="channel-notes-input">Channel Notes</label><input id="channel-notes-input" type="text" placeholder="Sales are going crazy even before release!" /></div>
+        <div class="vb-modal__actions">
+          <button id="modal-cancel" type="button">Cancel</button>
+          <button class="primary" id="modal-save" type="button">Save</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Page – Leads ================= -->
+  <section id="page-leads" class="page" aria-labelledby="leads-title">
+    <div class="category-block" style="margin-bottom:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+      <div id="leads-title" style="font-weight:800">Leads, Amazon Tool, and Panel Builder</div>
+      <div class="leads-toolbar"><button id="btn-add-panel" class="primary" type="button">Add Panel</button></div>
+    </div>
+
+    <div class="leads-grid" id="leads-grid">
+      <!-- Amazon Tool Tile -->
+      <div class="panel-tile" id="tile-amazon">
+        <div class="panel-title">
+          <span>Amazon Tool</span>
+          <span id="amz-status" class="gpt-small"><span class="status-dot" id="amz-dot"></span>Idle</span>
+        </div>
+        <div class="panel-body">
+          <div class="gpt-controls">
+            <input id="amz-link" type="text" placeholder="Paste Amazon link or ASIN" style="flex:1" />
+            <button id="amz-fetch" class="gpt-run" type="button">Fetch</button>
+          </div>
+          <div class="gpt-controls" style="margin-top:8px">
+            <input id="amz-query" type="text" placeholder="Search keywords for hidden ASINs" style="flex:1" />
+            <button id="amz-search" class="gpt-run" type="button">Search Hidden</button>
+          </div>
+          <div id="amz-results-card" class="center-card" style="margin-top:12px">
+            <h1 style="margin:0 0 8px 0">Amazon Fetch Results</h1>
+            <div id="amz-output" class="gpt-output" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Dynamic panels (e.g., Role Ping Scheduler) will be appended here -->
+    </div>
+
+    <!-- Add Panel Modal -->
+    <div id="panel-modal" class="vb-modal hidden" role="dialog" aria-modal="true" aria-labelledby="panel-modal-title">
+      <div class="vb-modal__content">
+        <div class="vb-modal__title" id="panel-modal-title">Add a Panel</div>
+        <div class="vb-field">
+          <label for="panel-select">Choose panel type</label>
+          <select id="panel-select">
+            <option value="pings">Role Ping Scheduler</option>
+            <option value="amz">Amazon Tool</option>
+            <option value="optional">Optional Channels</option>
+          </select>
+        </div>
+        <div class="vb-field">
+          <label for="panel-name">Panel Title</label>
+          <input id="panel-name" type="text" placeholder="My Leads Panel" />
+        </div>
+        <div class="vb-field">
+          <div class="panel-choices" id="panel-choices"></div>
+        </div>
+        <div class="vb-modal__actions">
+          <button id="panel-cancel" type="button">Cancel</button>
+          <button id="panel-create" class="primary" type="button">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shared image preview -->
+    <div id="amzPreviewPopup"><img src="" alt="Preview"></div>
+  </section>
+</div>
+
+<!-- ================= Status Helpers ================= -->
+<script>
+function setStatus(el, text, color){
+  el.textContent = text;
+  if(color) el.style.color = color;
+}
+function disableButtonTemporarily(btn, statusEl, processingLabel="🟡 Processing…"){
+  btn.disabled = true; btn.style.opacity = "0.6"; btn.style.cursor = "not-allowed";
+  if(statusEl) setStatus(statusEl, processingLabel, "#e3b341");
+}
+function enableButton(btn, statusEl, doneLabel="⚪ Idle"){
+  btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
+  if(statusEl) setStatus(statusEl, doneLabel, "#b5bac1");
+}
+</script>
+
+<!-- ================= Page Switcher ================= -->
+<script>
+(function(){
+  const pages = { agenda: document.getElementById("page-agenda"), leads: document.getElementById("page-leads") };
+  const tabs  = { agenda: document.getElementById("nav-agenda"),  leads: document.getElementById("nav-leads")  };
+  function show(page){
+    pages.agenda.classList.toggle("visible", page==="agenda");
+    pages.leads .classList.toggle("visible", page==="leads");
+    tabs.agenda.classList.toggle("active", page==="agenda");
+    tabs.leads .classList.toggle("active", page==="leads");
+  }
+  tabs.agenda.addEventListener("click", ()=>show("agenda"));
+  tabs.leads .addEventListener("click", ()=>show("leads"));
+  window.switchPage = show;
+
+  // Global actions wired to work on current page
+  const global = {
+    btnLoad: document.getElementById("btn-load"),
+    btnSave: document.getElementById("btn-save"),
+    btnGen:  document.getElementById("btn-generate"),
+    btnCopy: document.getElementById("btn-copy"),
+  };
+  if(global.btnLoad){ global.btnLoad.onclick = ()=> document.getElementById("btn-load")?.dispatchEvent(new Event('click')); }
+  if(global.btnSave){ global.btnSave.onclick = ()=> document.getElementById("btn-save")?.dispatchEvent(new Event('click')); }
+  if(global.btnGen){  global.btnGen.onclick  = ()=> document.getElementById("btn-generate")?.dispatchEvent(new Event('click')); }
+  if(global.btnCopy){ global.btnCopy.onclick = ()=> document.getElementById("btn-copy")?.dispatchEvent(new Event('click')); }
+})();
+</script>
+
+<!-- ================= Agenda Core Logic ================= -->
+<script>
+(function(){
+  const EMO = {
+    fire:"<a:rsfire:1350272043970461796>",
+    salute:"<a:rssalute:1350272389908267049>",
+    knock:"<a:rslknock:1247632729948946472>",
+    smart:"<:rssmart:1350271168992514183>",
+    gang:"<:rslgoat1:1247633099450486844>"
+  };
+  const ACO = [
+    ">   - **↳** Check ACO channels for live forms → https://discord.com/channels/876528050081251379/1366831857546559518 | https://discord.com/channels/876528050081251379/1312134455506239508",
+    `> Keep notifications on for surprise profitable drops ${EMO.gang}`,
+    "> - <#1255590577144201358> | <#1400615121415438446> | <#878305076073087026> | <#1400616066060783646> | <#1356465938614059079>"
+  ];
+  const FOOT = [
+    `${EMO.smart} <#1421233171407831110>\`\`\`If you’re new here, this is where to learn how it works and what commands to use.\`\`\``,
+    `> Make sure your <#1345505161409335389> is properly setup and if you need any help open a ticket in <#1034961011305873479>`,
+    "### Agenda updated with today’s changes, drop a ✅ after reading. @everyone"
+  ];
+
+  window.state = { daily: [], instore: [], upcoming: [], optional: [], output: "", leadsLayout: [] };
+  const state = window.state;
+
+  const lists = {
+    daily: document.getElementById("daily-channel-list"),
+    instore: document.getElementById("instore-channel-list"),
+    upcoming: document.getElementById("upcoming-channel-list"),
+    optional: document.getElementById("optional-channel-list"),
+  };
+
+  const out = document.getElementById("agenda-output");
+
+  const modal = document.getElementById("channel-modal"),
+        id = document.getElementById("channel-id-input"),
+        nameEl = document.getElementById("channel-name-input"),
+        notesEl = document.getElementById("channel-notes-input");
+
+  let tgt = "daily";
+
+function render(k){
+  const el = lists[k]; 
+  el.innerHTML = "";
+  state[k].forEach((x,i)=>{
+    const d = document.createElement("div");
+    d.className = "channel";
+    d.style.display = "flex";
+    d.style.alignItems = "center";
+    d.style.justifyContent = "space-between";
+    d.style.gap = "8px";
+
+    // left: #name (tooltip = notes)
+    const left = document.createElement("span");
+    left.textContent = `# ${x.name || x.id}`;
+    left.title = x.notes || "";
+
+    // right: tiny actions
+    const actions = document.createElement("div");
+    actions.style.display = "flex";
+    actions.style.gap = "6px";
+
+    const btnCopy = document.createElement("button");
+    btnCopy.type = "button";
+    btnCopy.className = "small";
+    btnCopy.textContent = "<#...>";
+    btnCopy.title = "Copy raw mention";
+    btnCopy.style.padding = "4px 6px";
+
+    const btnRemove = document.createElement("button");
+    btnRemove.type = "button";
+    btnRemove.className = "small";
+    btnRemove.textContent = "Remove";
+    btnRemove.style.padding = "4px 6px";
+
+    btnCopy.onclick = async (e)=>{
+      e.stopPropagation();
+      try{
+        await navigator.clipboard.writeText(`<#${x.id}>`);
+        const prev = btnCopy.textContent;
+        btnCopy.textContent = "Copied!";
+        setTimeout(()=> btnCopy.textContent = prev, 900);
+      }catch{
+        alert("Clipboard copy failed.");
+      }
+    };
+
+    btnRemove.onclick = (e)=>{
+      e.stopPropagation();
+      if(confirm("Remove this?")){
+        state[k].splice(i,1);
+        render(k);
+      }
+    };
+
+    actions.appendChild(btnCopy);
+    actions.appendChild(btnRemove);
+
+    d.appendChild(left);
+    d.appendChild(actions);
+
+    el.appendChild(d);
+  });
+}
+  function renderAll(){ ["daily","instore","upcoming","optional",].forEach(render); }
+
+  document.querySelectorAll(".add-btn").forEach(b=>b.onclick=()=>{
+    tgt=b.dataset.target; modal.classList.remove("hidden");
+    id.value=""; nameEl.value=""; notesEl.value=""; setTimeout(()=>id.focus(),60);
+  });
+  document.getElementById("modal-cancel").onclick=()=>modal.classList.add("hidden");
+  document.getElementById("modal-save").onclick=()=>{
+    if(!id.value) return;
+    state[tgt].push({ id:id.value.trim(), name:nameEl.value.trim(), notes:notesEl.value.trim() });
+    render(tgt); modal.classList.add("hidden");
+  };
+
+  function getDate(){
+    const d=new Date();
+    return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"2-digit",day:"2-digit"}).format(d).split("/");
+  }
+  function generateOutput(){
+    const [mm,dd]=getDate();
+    const A=state.daily.map(x=>`- <#${x.id}> ${x.notes?`- ${x.notes}`:""}`);
+    const B=state.upcoming.map(x=>`> - <#${x.id}> ${x.notes?`- ${x.notes}`:""}`);
+    const C=state.instore.map(x=>`- <#${x.id}> ${x.notes?`- ${x.notes}`:""}`);
+    state.output=[
+      `# Today's Scheduled Releases <a:rsfire:1350272043970461796> - ${mm}/${dd}`,
+      "-----------------------------------------------",
+      `# Online Reminders <a:rssalute:1350272389908267049>`,
+      ...A,"","> Weekly Guides / Upcoming",...B,...ACO,
+      "-----------------------------------------------",
+      `# In-store Reminders <a:rslknock:1247632729948946472>`,
+      ...C,"",...FOOT
+    ].join("\n");
+    out.value=state.output;
+  }
+
+  document.getElementById("btn-generate").onclick = generateOutput;
+  document.getElementById("btn-copy").onclick = async ()=>{ out.select(); await navigator.clipboard.writeText(out.value); alert("Copied!"); };
+  document.getElementById("btn-clear").onclick = ()=>{ out.value=""; state.output=""; };
+
+  document.getElementById("btn-save").onclick = () => {
+    if (window.saveLeadsLayout) window.saveLeadsLayout();
+    fetch("/save_settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state)
+    })
+      .then(() => alert("Saved!"))
+      .catch(() => alert("Save failed"));
+  };
+
+  document.getElementById("btn-load").onclick = () =>
+    fetch("/load_settings")
+      .then(r => r.json())
+      .then(j => {
+        Object.assign(state, j || {});
+        renderAll();
+        out.value = state.output || "";
+        if (modal && !modal.classList.contains("hidden")) modal.classList.add("hidden");
+        if (window.restoreLeadsLayout) window.restoreLeadsLayout();
+        alert("Loaded!");
+      })
+      .catch(() => alert("Load failed"));
+
+  window.renderAll = renderAll;
+  window.out = out;
+
+  // Auto-load saved settings on page open (silent, no alert)
+  document.addEventListener("DOMContentLoaded", ()=>{
+    fetch("/load_settings")
+      .then(r=>r.json())
+      .then(j=>{ Object.assign(state, j||{}); renderAll(); out.value = state.output || ""; if(window.restoreLeadsLayout) window.restoreLeadsLayout(); })
+      .catch(()=>{});
+  });
+})();
+</script>
+
+<!-- ================= Inline Discord-style Rendering on Generate ================= -->
+<script>
+(function(){
+  function renderDiscordFormat(text, state={daily:[],instore:[],upcoming:[],optional:[]}) {
+    if (!text) return "";
+    const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    let html = esc(text)
+      .replace(/^### (.*)$/gm,"<h3>$1</h3>")
+      .replace(/^# (.*)$/gm,"<h1>$1</h1>")
+      .replace(/\*\*(.*?)\*\*/g,"<b>$1</b>")
+      .replace(/```([^`]*)```/gs,"<pre><code>$1</code></pre>")
+      .replace(/`([^`]*)`/g,"<code>$1</code>")
+      .replace(/@everyone/g,'<span class="mention">@everyone</span>')
+      .replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank">$1</a>')
+      // Make bullet hint lines small: "- # 30 mins Reminder @role"
+      .replace(/^- # (.*)$/gm,'<span class="small">- # $1</span>')
+      .replace(/\n/g,"<br>");
+
+    // Channel mentions
+    html = html.replace(/&lt;#(\d+)&gt;/g,(m,id)=>{
+      let name = null;
+      for(const cat of ["daily","instore","upcoming","optional"]){
+        const found = state[cat]?.find(x=>x.id===id); if(found){ name = found.name || id; break; }
+      }
+      return `<span class="mention">#${name||id}</span>`;
+    });
+    // Emojis
+    html = html.replace(/&lt;(a?):([a-zA-Z0-9_]+):(\d+)&gt;/g,(m,a,name,id)=>{
+      const ext = a==="a" ? "gif" : "png";
+      return `<img class="emoji" src="https://cdn.discordapp.com/emojis/${id}.${ext}" alt=":${name}:" />`;
+    });
+    return `<div class="preview-msg">${html}</div>`;
+  }
+
+  // On generate, show a live, always-editable preview beneath the textarea.
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const ta = document.getElementById("agenda-output");
+    const gen = document.getElementById("btn-generate");
+    if(!ta || !gen) return;
+
+    let previewEl = null;
+    let liveBound = false;
+
+    function ensurePreview(){
+      if(!previewEl){
+        previewEl = document.createElement("div");
+        previewEl.className = "preview-msg";
+        previewEl.style.marginTop = "10px";
+        ta.insertAdjacentElement("afterend", previewEl);
+      }
+      previewEl.style.display = "block";
+      return previewEl;
+    }
+
+    function update(){
+      if(!previewEl) return;
+      previewEl.innerHTML = renderDiscordFormat(ta.value, window.state||{});
+    }
+
+    gen.addEventListener("click", ()=>{
+      ensurePreview();
+      update();
+      if(!liveBound){
+        ta.addEventListener("input", update);
+        ta.addEventListener("change", update);
+        liveBound = true;
+      }
+      // Keep textarea visible so it's fully editable while preview updates live
+    });
+
+    // Expose for other parts (e.g., when channel lists change)
+    window.updateAgendaPreview = update;
+  });
+})();
+</script>
+
+<!-- ================= Discord Tool Logic ================= -->
+<script>
+const discordStatus = document.getElementById("discord-status");
+const discordOut = document.getElementById("discord-output");
+const discordPullBtn = document.getElementById("discord-pull");
+
+async function checkDiscordAPI(){
+  try {
+    const res = await fetch("/discord_health", { cache: "no-store" });
+    const ok = res.ok;
+    discordStatus.textContent = ok ? "🟢 Live" : "🔴 Offline";
+    discordStatus.style.color = ok ? "#23c483" : "#ff4444";
+  } catch {
+    discordStatus.textContent = "🔴 Offline";
+    discordStatus.style.color = "#ff4444";
+  }
+}
+setInterval(checkDiscordAPI, 5000);
+checkDiscordAPI();
+
+async function pullDiscordChannels(){
+  disableButtonTemporarily(discordPullBtn, discordStatus);
+  discordOut.textContent = "Pulling channels from Discord and saving...";
+  const endpoints = [
+    { url: "/fetch_channels", method: "POST" },
+    { url: "/discord/fetch_channels", method: "POST" }
+  ];
+  let lastErr = null, data = null, res = null;
+  for (const ep of endpoints) {
+    try {
+      res = await fetch(ep.url, { method: ep.method });
+      const text = await res.text();
+      try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+      if (res.ok && data) break;
+      lastErr = new Error((data && data.error) || `HTTP ${res.status}`);
+    } catch (e) { lastErr = e; }
+  }
+  try {
+    if (!res || !res.ok) throw lastErr || new Error("Discord fetch failed");
+    if (data && (data.daily || data.instore || data.upcoming)) {
+      if (Array.isArray(data.daily))   state.daily   = data.daily;
+      if (Array.isArray(data.instore)) state.instore = data.instore;
+      if (Array.isArray(data.upcoming))state.upcoming= data.upcoming;
+      renderAll();
+      discordOut.textContent = "✅ Pulled and saved. Lists refreshed.";
+      return;
+    }
+    const load = await fetch("/load_settings");
+    if (load.ok) {
+      const j = await load.json().catch(()=>null);
+      if (j) {
+        Object.assign(state, j);
+        renderAll();
+        out.value = state.output || "";
+        discordOut.textContent = "✅ Pulled and loaded saved lists.";
+        return;
+      }
+    }
+    discordOut.textContent = "⚠️ Pulled, but no saved lists were returned.";
+  } catch (err) {
+    discordOut.textContent = "❌ Error: " + (err?.message || "Unknown error");
+  } finally {
+    enableButton(discordPullBtn, discordStatus);
+  }
+}
+if(discordPullBtn) discordPullBtn.addEventListener("click", pullDiscordChannels);
+</script>
+
+<!-- ================= ChatGPT-5 Logic ================= -->
+<script>
+const gptRunBtn=document.getElementById("gpt-run"),
+      gptOut=document.getElementById("gpt-output"),
+      gptMode=document.getElementById("gpt-mode"),
+      gptApi=document.getElementById("gpt-apikey"),
+      gptStatus=document.getElementById("gpt-status");
+
+async function runGPT(){
+  disableButtonTemporarily(gptRunBtn, gptStatus);
+  const key = gptApi.value.trim();
+  const mode = gptMode.value;
+  const text = document.getElementById("agenda-output").value.trim();
+
+  if (!key){ alert("Paste your OpenAI API key first."); enableButton(gptRunBtn, gptStatus); return; }
+  if (!text){ alert("Nothing to send."); enableButton(gptRunBtn, gptStatus); return; }
+
+  gptOut.textContent = "Processing with ChatGPT-5...";
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+      body: JSON.stringify({
+        model: "gpt-5",
+        messages: [
+          { role: "system", content: "You are ChatGPT-5 assistant for Reselling Secrets Agenda Tool." },
+          { role: "user", content:
+              mode === "summary"
+                ? `Summarize the following agenda into a short Discord-ready one-liner:\n\n${text}`
+                : `Proofread or rephrase the following agenda while keeping tone casual and Discord-ready:\n\n${text}`
+          }
+        ],
+        temperature: 0.7
+      })
+    });
+    if (!res.ok) throw new Error("Response not OK");
+    const data = await res.json();
+    const msg = data.choices?.[0]?.message?.content || "(No response)";
+    gptOut.textContent = msg.trim();
+  } catch (err) {
+    gptOut.textContent = "❌ Error: " + err.message;
+  } finally {
+    enableButton(gptRunBtn, gptStatus);
+  }
+}
+if(gptRunBtn) gptRunBtn.addEventListener("click",runGPT);
+</script>
+
+<!-- ================= Leads: Amazon API Logic ================= -->
+<script>
+function showAmzResultsPanel(){
+  const wrap = document.getElementById("amz-results-card");
+  if(!wrap) return;
+  const hidden = getComputedStyle(wrap).display === "none";
+  if(hidden){
+    wrap.style.display = "block";
+  }
+  try{ wrap.scrollIntoView({behavior:"smooth", block:"nearest"}) }catch{}
+}
+
+/* Formatting helpers */
+function explainListPrice(list){
+  if(list==null) return "N/A";
+  const s = String(list).trim();
+  if(!s) return "N/A";
+  return s === "$0.01" ? "$0.01  ← likely a placeholder / bad scrape" : s;
+}
+function explainSavePct(pct){
+  const n = Number(pct);
+  if(!Number.isFinite(n) || n <= 0) return "0%  ← no detectable discount vs list";
+  return `${n}% off vs list`;
+}
+function explainCoupon(text){
+  if(!text) return "None detected";
+  const mDollar = text.match(/\$[\d,.]+/);
+  const mPct    = text.match(/\d+%/);
+  if(mDollar) return `${text}  ← clip coupon to save ${mDollar[0]}`;
+  if(mPct)    return `${text}  ← clip coupon to save ${mPct[0]}`;
+  return `${text}  ← coupon present`;
+}
+function explainAvailability(v){ return v ? v : "Not shown" }
+function explainDealLabel(v){
+  if(!v) return "None";
+  if(/limited/i.test(v)) return "Limited-Time Deal";
+  if(/lightning/i.test(v)) return "Lightning Deal";
+  if(/day/i.test(v)) return "Deal of the Day";
+  return v;
+}
+function formatProductForHuman(p){
+  return [
+    `Title: ${p.title||"Unknown"}`,
+    `Buybox: ${p.buybox_price||"N/A"}`,
+    `List price: ${explainListPrice(p.list_price)}`,
+    `Savepct: ${explainSavePct(p.savepct)}`,
+    `Image: ${p.image||"N/A"}`,
+    `Coupon: ${explainCoupon(p.coupon)}`,
+    `Availability: ${explainAvailability(p.availability)}`,
+    `Deal Label: ${explainDealLabel(p.deal_label)}`,
+    `Product Link: ${p.affiliate||"N/A"}`
+  ].join("\n");
+}
+function formatSearchForHuman(results=[]){
+  if(!results.length) return "No results.";
+  return results.map((r,i)=>[
+    `#${i+1}`,
+    `Title: ${r.title||"Unknown"}`,
+    `ASIN: ${r.asin}`,
+    `Listed price (rough): ${r.price||"N/A"}`,
+    `Product Link: ${r.url}`
+  ].join("\n")).join("\n\n");
+}
+
+/* ===== ASIN helper ===== */
+function extractASINClient(s){
+  s = (s||"").trim();
+  const m = s.match(/([A-Z0-9]{10})(?:[/?#]|$)/i);
+  return m ? m[1].toUpperCase() : (/[A-Z0-9]{10}/i.test(s) ? s.toUpperCase() : "");
+}
+
+/* Core setup */
+const amzFetchBtn = document.getElementById("amz-fetch");
+const amzSearchBtn = document.getElementById("amz-search");
+const amzInput = document.getElementById("amz-link");
+const amzQuery = document.getElementById("amz-query");
+const amzOut = document.getElementById("amz-output");
+const amzStatus = document.getElementById("amz-status");
+const amzDot = document.getElementById("amz-dot");
+
+/* ===== fetchAmazonProduct() → /paapi/get-items ===== */
+async function fetchAmazonProduct(){
+  disableButtonTemporarily(amzFetchBtn, amzStatus);
+  showAmzResultsPanel();
+  amzOut.textContent = "Fetching product data...";
+  try{
+    const raw = amzInput.value.trim();
+    const asin = extractASINClient(raw);
+
+    let res;
+    if (asin) {
+      res = await fetch("http://127.0.0.1:5050/paapi/get-items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ asin })
+      });
+    } else if (/^https?:\/\//i.test(raw)) {
+      // Use unified /paapi/price endpoint; server also provides /price alias.
+      res = await fetch("http://127.0.0.1:5050/paapi/price", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ link: raw })
+      });
+    } else {
+      throw new Error("Provide a valid Amazon link or ASIN");
+    }
+
+    let data = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok) {
+      const msg = data?.error?.message || data?.error?.code || `HTTP ${res.status}`;
+      throw new Error(msg);
+    }
+    if (data?.error) {
+      throw new Error(data.error.message || data.error.code || "Unknown PA-API error");
+    }
+
+    amzOut.textContent = formatProductForHuman(data);
+    if (typeof renderAmazonCard === "function") renderAmazonCard(data);
+  }catch(err){
+    amzOut.textContent = "❌ Error: " + err.message;
+    const container = document.getElementById("amzResultContainer");
+    if (container) container.innerHTML = `<div style="color:#ed4245">❌ ${err.message}</div>`;
+  }finally{
+    enableButton(amzFetchBtn, amzStatus);
+  }
+}
+
+/* ===== searchHiddenASINs() → /paapi/search-items ===== */
+async function searchHiddenASINs(){
+  disableButtonTemporarily(amzSearchBtn, amzStatus);
+  showAmzResultsPanel();
+  amzOut.textContent = "Searching…";
+  try{
+    const payload = {
+      keywords: amzQuery.value.trim(),
+      searchIndex: "All",
+      page: 1
+    };
+
+    const res = await fetch("http://127.0.0.1:5050/paapi/search-items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    let data = null;
+    try { data = await res.json(); } catch {}
+
+    if (!res.ok) {
+      const msg = data?.error?.message || data?.error?.code || `HTTP ${res.status}`;
+      throw new Error(msg);
+    }
+    if (data?.error) {
+      throw new Error(data.error.message || data.error.code || "Unknown PA-API error");
+    }
+
+    amzOut.textContent = formatSearchForHuman(data.results || []);
+  }catch(err){
+    amzOut.textContent = "❌ Error: " + err.message;
+  }finally{
+    enableButton(amzSearchBtn, amzStatus);
+  }
+}
+
+async function checkAmazonAPI(){
+  try{
+    const res = await fetch("http://127.0.0.1:5050/health",{ cache:"no-store" });
+    let statusText = "🔴 Offline"; let ok = false;
+    if(res.ok){
+      ok = true;
+      try{
+        const j = await res.json();
+        if(j && j.status === "warn"){
+          statusText = "🟡 Live (missing creds)";
+          ok = false; // treat as not fully live for UI dot
+        }else{
+          statusText = "🟢 Live";
+        }
+      }catch{ statusText = "🟢 Live"; }
+    }
+    amzStatus.textContent = statusText;
+    const green = statusText.includes("🟢");
+    const yellow = statusText.includes("🟡");
+    amzStatus.style.color = green ? "#23c483" : (yellow ? "#e3b341" : "#ff4444");
+    amzDot.classList.toggle("status-ok", green);
+    amzDot.classList.toggle("status-bad", !(green));
+  }catch{
+    amzStatus.textContent = "🔴 Offline";
+    amzStatus.style.color = "#ff4444";
+    amzDot.classList.remove("status-ok");
+    amzDot.classList.add("status-bad");
+  }
+}
+setInterval(checkAmazonAPI, 5000);
+checkAmazonAPI();
+
+if(amzFetchBtn)  amzFetchBtn.addEventListener("click", fetchAmazonProduct);
+if(amzSearchBtn) amzSearchBtn.addEventListener("click", searchHiddenASINs);
+
+// ===== UI niceties: auto-grow any textarea with class .auto-grow =====
+document.addEventListener("input", (e)=>{
+  const t = e.target;
+  if(!(t instanceof HTMLElement)) return;
+  if(t.tagName === 'TEXTAREA' && t.classList.contains('auto-grow')){
+    const ta = t; // HTMLTextAreaElement
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight + 2, 480) + 'px';
+  }
+});
+// Initialize sizes on load
+document.addEventListener("DOMContentLoaded", ()=>{
+  document.querySelectorAll('textarea.auto-grow').forEach((ta)=>{
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight + 2, 480) + 'px';
+  });
+});
+</script>
+<!-- ================= End: Leads: Amazon API Logic ================= -->
+
+<!-- ================= Leads: Amazon Card Renderer ================= -->
+<script>
+function renderAmazonCard(data){
+  // Ensure a container exists; create one under the results card if missing
+  let container = document.getElementById("amzResultContainer");
+  if(!container){
+    const host = document.getElementById("amz-results-card");
+    if(host){
+      container = document.createElement("div");
+      container.id = "amzResultContainer";
+      container.style.marginTop = "8px";
+      host.appendChild(container);
+    }else{
+      // No suitable host to render into — safely exit
+      return;
+    }
+  }
+
+  container.innerHTML = "";
+  if(!data || data.error){
+    const errText = (data && data.error) ? (data.error.message || data.error) : "Failed to fetch product data.";
+    container.innerHTML = `<div style="color:#ed4245">${errText}</div>`;
+    return;
+  }
+  const card = document.createElement("div"); card.id = "amzResultCard";
+
+  const details = document.createElement("div"); details.id = "amzCardDetails";
+  details.innerHTML = `
+    <strong>${data.title || "Unknown Product"}</strong>
+    ${data.deal_label ? `<div id="amzDeal" style="color:#faa61a;font-weight:700">${data.deal_label}</div>` : ""}
+    <div id="amzPriceLine">Buy Box: ${data.buybox_price || "N/A"}</div>
+    <div id="amzListLine">List: ${data.list_price || "N/A"}</div>
+    <div id="amzSaveLine">Save: ${Number(data.savepct) > 0 ? data.savepct + "%" : "0%"}</div>
+    ${data.coupon ? `<div id="amzCoupon">${data.coupon}</div>` : ""}
+    ${data.availability ? `<div id="amzStock">${data.availability}</div>` : ""}
+    <a id="amzAffiliate" href="${data.affiliate}" target="_blank" rel="noopener noreferrer">View on Amazon</a>
+  `;
+  card.appendChild(details);
+  container.appendChild(card);
+}
+function showAmzPreview(url){ /* no-op (images removed) */ }
+</script>
+
+<!-- ================= Leads: Panel Builder (incl. Role Ping Scheduler) ================= -->
+<script>
+(function(){
+  const grid = document.getElementById("leads-grid");
+  const openBtn = document.getElementById("btn-add-panel");
+  const modal = document.getElementById("panel-modal");
+  const sel = document.getElementById("panel-select");
+  const nameInput = document.getElementById("panel-name");
+  const cancelBtn = document.getElementById("panel-cancel");
+  const createBtn = document.getElementById("panel-create");
+
+
+  function idGen(){ return Math.random().toString(36).slice(2,8); }
+
+  function panelTemplate(title, bodyHtml){
+    const tile = document.createElement("div");
+    tile.className = "panel-tile";
+    tile.innerHTML = `
+      <div class="panel-title">
+        <span>${title}</span>
+        <div>
+          <button type="button" class="small panel-close">Close</button>
+        </div>
+      </div>
+      <div class="panel-body">${bodyHtml}</div>
+      <div class="resize-handle"></div>
+    `;
+    tile.querySelector(".panel-close").addEventListener("click", ()=> tile.remove());
+
+    enableTileDragAndResize(tile);
+    return tile;
+  }
+function shortenLabel(s, n = 64){
+  if(!s) return "";
+  return s.length > n ? s.slice(0, n) + "…" : s;
+}
+
+/* ===== Roles map + helpers ===== */
+const ROLE_MAP = {
+  none:   { label: "— No role —", id: "" },
+  flips:  { label: "Flips", id: "1139627400901169212" },
+  instore:{ label: "In Store Flips", id: "1227647933579526144" },
+  member: { label: "Member", id: "876569612085518376" },
+};
+
+function roleSelect(domId){
+  return `
+    <select id="${domId}" style="min-width:170px;height:38px;border-radius:8px;border:1px solid var(--border);background:var(--msg);color:var(--text);padding:0 8px">
+      <option value="">— No role —</option>
+      <option value="${ROLE_MAP.flips.id}">${ROLE_MAP.flips.label}</option>
+      <option value="${ROLE_MAP.instore.id}">${ROLE_MAP.instore.label}</option>
+      <option value="${ROLE_MAP.member.id}">${ROLE_MAP.member.label}</option>
+    </select>
+  `;
+}
+
+function withRole(roleId, msg){
+  if(!roleId) return (msg||"");
+  return `<@&${roleId}> ${msg||""}`.trim();
+}
+
+/* ===== END Roles map + helpers ===== */
+  const registry = {
+    /* Role Ping Scheduler */
+    pings: {
+      title: "Role Ping Scheduler",
+      render: (title)=> {
+        const pid = idGen();
+
+        const channels = []
+          .concat((window.state?.daily||[]).map(x=>({group:"DAILY", ...x})))
+          .concat((window.state?.instore||[]).map(x=>({group:"INSTORE", ...x})))
+          .concat((window.state?.upcoming||[]).map(x=>({group:"UPCOMING", ...x})));
+
+const options = channels.length
+  ? channels.map(c=>{
+      const full = `[${c.group}] #${c.name || c.id} (${c.id})`;
+      const short = shortenLabel(full, 64);
+      return `<option value="${c.id}" title="${full}">${short}</option>`;
+    }).join("")
+  : `<option value="">(No channels loaded yet — click “Pull Channels” on the right)</option>`;
+
+
+
+const tile = panelTemplate(title, `
+  <div class="gpt-controls">
+    <select id="pg-chan-${pid}" style="flex:1">${options}</select>
+  </div>
+
+      <div class="gpt-controls" style="margin-top:8px">
+        <label class="small" for="pg-drop-${pid}">Drop time</label>
+        <input id="pg-drop-${pid}" type="datetime-local" style="flex:1" />
+      </div>
+
+  <!-- Three rows: each has a role dropdown + message input -->
+  <div class="gpt-controls" style="margin-top:8px; flex-direction:column; gap:8px">
+
+    <div class="ping-grid">
+      <div class="small">T-30</div>
+      <input id="pg-off30-${pid}" class="offset-input" type="number" min="0" step="1" value="30" title="Offset minutes" />
+      <div style="display:flex; gap:8px; align-items:flex-start; width:100%">
+        ${roleSelect(`pg-role30-${pid}`)}
+        <textarea id="pg-m30-${pid}" class="auto-grow" placeholder="Multi-line reminder (optional)" style="flex:1"></textarea>
+      </div>
+    </div>
+
+    <div class="ping-grid">
+      <div class="small">T-15</div>
+      <input id="pg-off15-${pid}" class="offset-input" type="number" min="0" step="1" value="15" title="Offset minutes" />
+      <div style="display:flex; gap:8px; align-items:flex-start; width:100%">
+        ${roleSelect(`pg-role15-${pid}`)}
+        <textarea id="pg-m15-${pid}" class="auto-grow" placeholder="Multi-line reminder (optional)" style="flex:1"></textarea>
+      </div>
+    </div>
+
+    <div class="ping-live-grid">
+      <div class="small">LIVE NOW</div>
+      <div style="display:flex; gap:8px; width:100%">
+        ${roleSelect(`pg-rolelive-${pid}`)}
+        <textarea id="pg-live-${pid}" class="auto-grow" placeholder="LIVE NOW msg (required)" style="flex:1"></textarea>
+      </div>
+    </div>
+
+    <div class="small">Mentions allowed: &lt;@&amp;ROLEID&gt;, @everyone, links, etc.</div>
+  </div>
+
+  <div class="gpt-controls" style="margin-top:8px">
+    <button id="pg-start-${pid}" class="gpt-run" type="button">Start</button>
+    <button id="pg-sendnow-${pid}" type="button">Send LIVE Now</button>
+    <button id="pg-cancel-${pid}" type="button" disabled>Cancel Schedule</button>
+  </div>
+
+  <div class="gpt-output" id="pg-log-${pid}" style="margin-top:10px; max-height:200px; overflow:auto">Idle</div>
+`);
+
+
+        const chanEl = tile.querySelector(`#pg-chan-${pid}`);
+        const dtEl   = tile.querySelector(`#pg-drop-${pid}`);
+        const m30El  = tile.querySelector(`#pg-m30-${pid}`);
+        const m15El  = tile.querySelector(`#pg-m15-${pid}`);
+        const off30El= tile.querySelector(`#pg-off30-${pid}`);
+        const off15El= tile.querySelector(`#pg-off15-${pid}`);
+        const liveEl = tile.querySelector(`#pg-live-${pid}`);
+        const startB = tile.querySelector(`#pg-start-${pid}`);
+        const sendB  = tile.querySelector(`#pg-sendnow-${pid}`);
+        const cancelB= tile.querySelector(`#pg-cancel-${pid}`);
+        const logEl  = tile.querySelector(`#pg-log-${pid}`);
+const role30El  = tile.querySelector(`#pg-role30-${pid}`);
+const role15El  = tile.querySelector(`#pg-role15-${pid}`);
+const roleLiveEl= tile.querySelector(`#pg-rolelive-${pid}`);
+
+
+        let schedId = null;
+
+        const log = (msg)=>{
+          const ts = new Date().toLocaleTimeString();
+          logEl.textContent = (logEl.textContent === "Idle" ? "" : logEl.textContent + "\n") + `[${ts}] ${msg}`;
+          logEl.scrollTop = logEl.scrollHeight;
+        };
+
+        const parseLocalToMs = (value)=>{
+          if(!value) return 0;
+          const d = new Date(value);
+          const ms = d.getTime();
+          return Number.isFinite(ms) ? ms : 0;
+        };
+
+        function nl2br(s){ return (s||"").replace(/\r\n|\r|\n/g, "\n"); }
+        function composeReminder(offsetMin, msg, roleId){
+          const roleTag = (roleId||"").trim() ? `<@&${roleId.trim()}>` : "";
+          const header = `${offsetMin} mins Reminder ${roleTag}`.trim();
+          const clean = (msg||"").trim();
+          if (clean) return `${nl2br(clean)}\n- # ${header}`;
+          return `### ${header}`;
+        }
+
+        startB.addEventListener("click", async ()=>{
+          const channel_id = (chanEl.value||"").trim();
+          const drop_ms = parseLocalToMs(dtEl.value);
+          const o30 = Math.max(0, parseInt(off30El.value||"30",10));
+          const o15 = Math.max(0, parseInt(off15El.value||"15",10));
+          const r30 = { offset_min: o30, label: `T-${o30}`, content: composeReminder(o30, m30El.value, (role30El.value||"").trim()) };
+          const r15 = { offset_min: o15, label: `T-${o15}`, content: composeReminder(o15, m15El.value, (role15El.value||"").trim()) };
+          const msgLive= withRole((roleLiveEl.value||"").trim(), (liveEl.value||"").trim());
+
+
+          if(!channel_id){ alert("Pick a channel"); return; }
+          if(!drop_ms){ alert("Set a valid drop date/time"); return; }
+          if(!msgLive){ alert("LIVE NOW message is required"); return; }
+
+          log("Scheduling…");
+          try{
+            const res = await fetch("/scheduler/schedule_drop", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ channel_id, drop_ts_ms: drop_ms, msgLive, reminders: [r30, r15] })
+            });
+            const data = await res.json().catch(()=>({}));
+            if(!res.ok || !data.ok){ throw new Error(data?.error || `HTTP ${res.status}`); }
+            schedId = data.id;
+            cancelB.disabled = false;
+            const when = (ms)=> new Date(ms).toLocaleString();
+            const etaLines = (data.etas||[]).map(e=>`${e.label} → ${when(e.eta_ms)}`).join(" | ") || "none (all in past)";
+            log(`Scheduled id=${schedId} • ${etaLines}`);
+          }catch(e){
+            log(`❌ ${e.message||e}`);
+          }
+        });
+
+        sendB.addEventListener("click", async ()=>{
+          const channel_id = (chanEl.value||"").trim();
+          const content = withRole((roleLiveEl.value||"").trim(), (liveEl.value||"").trim());
+          if(!channel_id || !content){ alert("Channel and LIVE message required"); return; }
+          log("Sending LIVE now…");
+          try{
+            const res = await fetch("/discord/send_message", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ channel_id, content })
+            });
+            const data = await res.json().catch(()=>({}));
+            if(!res.ok || !data.ok){ throw new Error(data?.error || `HTTP ${res.status}`); }
+            log(`Sent (message id ${data.id})`);
+          }catch(e){
+            log(`❌ ${e.message||e}`);
+          }
+        });
+
+        cancelB.addEventListener("click", async ()=>{
+          if(!schedId){ return; }
+          log("Cancelling…");
+          try{
+            const res = await fetch("/scheduler/cancel", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: schedId })
+            });
+            const data = await res.json().catch(()=>({}));
+            if(!res.ok || !data.ok){ throw new Error(data?.error || `HTTP ${res.status}`); }
+            log("Cancelled.");
+            cancelB.disabled = true;
+          }catch(e){
+            log(`❌ ${e.message||e}`);
+          }
+        });
+
+        tile.dataset.kind = "pings";
+        tile.dataset.tileId = "pings-" + pid;
+        return tile;
+      }
+    }
+  };
+
+  const choices = [
+    { key: "pings", title: "Role Ping Scheduler", preview: `<div class="small">Schedule T-30 / T-15 / LIVE with role mentions.</div>` },
+    { key: "amz", title: "Amazon Tool", preview: `<div class="small">Search & fetch PA-API product cards and details.</div>` },
+    { key: "optional", title: "Optional Channels", preview: `<div class="small">Quick list of optional/extra channels.</div>` },
+  ];
+
+  function renderPanelChoices(){
+    const wrap = document.getElementById("panel-choices");
+    if(!wrap) return;
+    wrap.innerHTML = "";
+    choices.forEach(c => {
+      const d = document.createElement("div");
+      d.className = "panel-choice";
+      d.innerHTML = `<div class="title">${c.title}</div><div class="small">${c.preview.replace(/<[^>]*>/g,'')}</div>`;
+      d.addEventListener("click", ()=>{ sel.value = c.key; nameInput.value = c.title; });
+      wrap.appendChild(d);
+    });
+  }
+
+  openBtn.addEventListener("click", ()=>{
+    nameInput.value = "";
+    sel.value = "pings";
+    renderPanelChoices();
+    modal.classList.remove("hidden");
+  });
+  cancelBtn.addEventListener("click", ()=> modal.classList.add("hidden"));
+  createBtn.addEventListener("click", ()=>{
+    const type = sel.value;
+    const rawName = nameInput.value.trim();
+    if(type === "amz"){
+      // clone a new Amazon Tool tile
+      const tile = panelTemplate(rawName || "Amazon Tool", document.getElementById("tile-amazon").querySelector(".panel-body").innerHTML);
+      tile.dataset.kind = "amz";
+      tile.dataset.tileId = "amz-" + idGen();
+      grid.appendChild(tile);
+      modal.classList.add("hidden");
+      return;
+    }
+    if(type === "optional"){
+      // create an Optional Channels tile showing current optional list
+      const listHtml = `
+        <div class="gpt-output" style="min-height:100px">
+          ${(window.state?.optional||[]).map(x=>`# ${x.name||x.id} (${x.id})`).join("\n") || "No optional channels yet"}
+        </div>`;
+      const tile = panelTemplate(rawName || "Optional Channels", listHtml);
+      tile.dataset.kind = "optional";
+      tile.dataset.tileId = "opt-" + idGen();
+      grid.appendChild(tile);
+      modal.classList.add("hidden");
+      return;
+    }
+    // default: registry-backed (currently pings)
+    const finalTitle = rawName || (registry[type]?.title || "Panel");
+    const tile = registry[type].render(finalTitle);
+    grid.appendChild(tile);
+    modal.classList.add("hidden");
+  });
+
+  // ===== Drag + snap + resize =====
+  const SNAP = 8; // px snap
+  function snap(n){ return Math.round(n / SNAP) * SNAP; }
+
+  function enableTileDragAndResize(tile){
+    // Drag by title bar
+    const header = tile.querySelector('.panel-title');
+    let startX=0, startY=0, startLeft=0, startTop=0, dragging=false;
+    header.addEventListener('mousedown', (e)=>{
+      dragging = true;
+      tile.classList.add('dragging');
+      const r = tile.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY;
+      // Use inline left/top (absolute) to allow free placement; keep within grid
+      const style = getComputedStyle(tile);
+      const gridRect = grid.getBoundingClientRect();
+      // Convert current position to offsets relative to grid
+      startLeft = (r.left - gridRect.left) + grid.scrollLeft;
+      startTop  = (r.top  - gridRect.top)  + grid.scrollTop;
+      tile.style.position = 'absolute';
+      tile.style.left = startLeft + 'px';
+      tile.style.top  = startTop + 'px';
+      document.body.style.userSelect = 'none';
+    });
+    window.addEventListener('mousemove', (e)=>{
+      if(!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      const nl = snap(startLeft + dx);
+      const nt = snap(startTop + dy);
+      tile.style.left = nl + 'px';
+      tile.style.top  = nt + 'px';
+    });
+    window.addEventListener('mouseup', ()=>{
+      if(dragging){ dragging = false; tile.classList.remove('dragging'); document.body.style.userSelect = ''; if (window.saveLeadsLayout) window.saveLeadsLayout(); }
+    });
+
+    // Resize via handle
+    const handle = tile.querySelector('.resize-handle');
+    let rs=false, sw=0, sh=0, sx=0, sy=0;
+    handle.addEventListener('mousedown', (e)=>{
+      e.stopPropagation();
+      rs = true; sx = e.clientX; sy = e.clientY;
+      const r = tile.getBoundingClientRect();
+      sw = r.width; sh = r.height;
+      document.body.style.userSelect = 'none';
+    });
+    window.addEventListener('mousemove', (e)=>{
+      if(!rs) return;
+      const dw = e.clientX - sx; const dh = e.clientY - sy;
+      const nw = Math.max(280, snap(sw + dw));
+      const nh = Math.max(180, snap(sh + dh));
+      tile.style.width = nw + 'px';
+      tile.style.height = nh + 'px';
+    });
+    window.addEventListener('mouseup', ()=>{
+      if(rs){ rs=false; document.body.style.userSelect = ''; if (window.saveLeadsLayout) window.saveLeadsLayout(); }
+    });
+  }
+
+  // ===== Layout persistence and overlap avoidance =====
+  function tiles(){ return Array.from(grid.querySelectorAll('.panel-tile')); }
+  function rectOf(tile){ const r = tile.getBoundingClientRect(); const g = grid.getBoundingClientRect(); return {left: r.left - g.left + grid.scrollLeft, top: r.top - g.top + grid.scrollTop, width: r.width, height: r.height}; }
+  function intersects(a,b){ return !(a.left + a.width <= b.left || b.left + b.width <= a.left || a.top + a.height <= b.top || b.top + b.height <= a.top); }
+  function applyLayout(tile, lay){ tile.style.position = 'absolute'; tile.style.left = snap(lay.left||0) + 'px'; tile.style.top = snap(lay.top||0) + 'px'; if(lay.width) tile.style.width = Math.max(260, snap(lay.width)) + 'px'; if(lay.height) tile.style.height = Math.max(140, snap(lay.height)) + 'px'; }
+  function nudgeToAvoid(tile){
+    const maxIter = 300; let iter = 0;
+    const self = rectOf(tile);
+    while(iter++ < maxIter){
+      let collision = null;
+      for(const other of tiles()){
+        if(other === tile) continue;
+        const r = rectOf(other);
+        if(intersects(self, r)){ collision = r; break; }
+      }
+      if(!collision) break;
+      // push to the right by SNAP, wrap to next row when exceeding grid width
+      self.left = snap(self.left + SNAP);
+      const gw = grid.clientWidth;
+      if(self.left + self.width + SNAP > gw){ self.left = 0; self.top = snap(self.top + SNAP); }
+      tile.style.left = self.left + 'px'; tile.style.top = self.top + 'px';
+    }
+  }
+
+  window.saveLeadsLayout = function(){
+    window.state = window.state || {};
+    window.state.leadsLayout = tiles().map(t=>{
+      const r = rectOf(t); const id = t.dataset.tileId || t.id || '';
+      return { id, kind: t.dataset.kind||'', title: (t.querySelector('.panel-title span')?.textContent||'').trim(), left: Math.max(0, Math.round(r.left)), top: Math.max(0, Math.round(r.top)), width: Math.round(r.width), height: Math.round(r.height) };
+    });
+  };
+
+  window.restoreLeadsLayout = function(){
+    const layout = (window.state && window.state.leadsLayout) || [];
+    if(!Array.isArray(layout) || !layout.length) return;
+    const byId = Object.create(null);
+    tiles().forEach(t=>{ const id = t.dataset.tileId || t.id || ''; if(id) byId[id]=t; });
+    for(const lay of layout){
+      let t = byId[lay.id];
+      if(!t){
+        // Recreate known kinds
+        if(lay.kind === 'pings' && registry.pings){ t = registry.pings.render(lay.title||'Role Ping Scheduler'); grid.appendChild(t); }
+        else if(lay.kind === 'amz'){ t = panelTemplate(lay.title||'Amazon Tool', document.getElementById('tile-amazon').querySelector('.panel-body').innerHTML); t.dataset.kind='amz'; t.dataset.tileId = lay.id || ('amz-'+idGen()); grid.appendChild(t); }
+        else if(lay.kind === 'optional'){ const listHtml = `<div class="gpt-output" style="min-height:100px">${(window.state?.optional||[]).map(x=>`# ${x.name||x.id} (${x.id})`).join("\n") || "No optional channels yet"}</div>`; t = panelTemplate(lay.title||'Optional Channels', listHtml); t.dataset.kind='optional'; t.dataset.tileId= lay.id || ('opt-'+idGen()); grid.appendChild(t); }
+        else { continue; }
+      }
+      applyLayout(t, lay);
+      nudgeToAvoid(t);
+    }
+  };
+
+  // Tag built-in Amazon tile for persistence
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const base = document.getElementById('tile-amazon');
+    if(base){ if(!base.dataset.kind) base.dataset.kind = 'amz'; if(!base.dataset.tileId) base.dataset.tileId = 'amz-root'; }
+  });
+})();
+</script>
+
+</body>
+</html>
+<!-- ================= End: RS Dashboard ================= -->

@@ -1,0 +1,181 @@
+[
+  {
+    "time": "Tue 10/28/2025  0:04:41.91",
+    "level": "INFO",
+    "event": "Logs reset successfully"
+  },
+  {
+    "event": "mention_bot_start",
+    "timestamp": "2025-10-28 00:05:01"
+  },
+  {
+    "event": "forwarder_start",
+    "timestamp": "2025-10-28 00:05:02"
+  },
+  {
+    "event": "bridge_start",
+    "timestamp": "2025-10-28 00:05:03"
+  },
+  {
+    "event": "bot_ready",
+    "timestamp": "2025-10-28 00:05:05"
+  },
+  {
+    "event": "bridge_listening",
+    "channel_map_count": 13,
+    "timestamp": "2025-10-28 00:05:05"
+  },
+  {
+    "event": "heartbeat",
+    "bot_name": "d2d.py",
+    "status": "listening",
+    "channels_monitored": 13,
+    "timestamp": "2025-10-28 00:05:05"
+  },
+  {
+    "event": "mention_bot_ready",
+    "timestamp": "2025-10-28 00:05:05"
+  },
+  {
+    "event": "message_forwarder_start",
+    "timestamp": "2025-10-28 00:05:06"
+  },
+  {
+    "event": "message_detected",
+    "channel_id": 1390544639777443880,
+    "source_channel_id": 1390544639777443880,
+    "source_channel_name": null,
+    "is_monitored": true,
+    "is_webhook": true,
+    "action": "detected",
+    "timestamp": "2025-10-28 00:05:33"
+  },
+  {
+    "event": "message_detected",
+    "channel_id": 1430898104676257916,
+    "source_channel_id": 1430898104676257916,
+    "source_channel_name": null,
+    "is_monitored": false,
+    "is_webhook": true,
+    "action": "detected",
+    "timestamp": "2025-10-28 00:05:34"
+  },
+  {
+    "event": "webhook_forward",
+    "channel_id": 1390544639777443880,
+    "webhook_url": "https://discord.com/api/webhooks/14309069004128952...",
+    "success": true,
+    "error": null,
+    "timestamp": "2025-10-28 00:05:34"
+  },
+  {
+    "event": "message_detected",
+    "channel_id": 1400543254864466071,
+    "source_channel_id": 1400543254864466071,
+    "source_channel_name": null,
+    "is_monitored": false,
+    "is_webhook": true,
+    "action": "detected",
+    "timestamp": "2025-10-28 00:05:34"
+  },
+  {
+    "event": "message_classified",
+    "message_id": "1432581034855239742",
+    "category": "unknown",
+    "timestamp": "2025-10-28 00:05:34"
+  },
+  {
+    "event": "message_detected",
+    "channel_id": 1343710303984029766,
+    "source_channel_id": 1343710303984029766,
+    "source_channel_name": null,
+    "is_monitored": false,
+    "is_webhook": true,
+    "action": "detected",
+    "timestamp": "2025-10-28 00:05:44"
+  },
+  {
+    "event": "message_detected",
+    "channel_id": 1402703014971834438,
+    "source_channel_id": 1402703014971834438,
+    "source_channel_name": null,
+    "is_monitored": false,
+    "is_webhook": true,
+    "action": "detected",
+    "timestamp": "2025-10-28 00:06:22"
+  },
+  {
+    "event": "message_classified",
+    "message_id": "1432581239906500648",
+    "category": "unknown",
+    "timestamp": "2025-10-28 00:06:22"
+  },
+  {
+    "event": "message_detected",
+    "channel_id": 1293347112439775275,
+    "source_channel_id": 1293347112439775275,
+    "source_channel_name": null,
+    "is_monitored": false,
+    "is_webhook": false,
+    "action": "detected",
+    "timestamp": "2025-10-28 00:06:40"
+  },
+  {
+    "event": "message_classified",
+    "message_id": "1432581313344573573",
+    "category": "unknown",
+    "timestamp": "2025-10-28 00:06:40"
+  },
+  {
+    "event": "message_detected",
+    "channel_id": 1430892060700971038,
+    "source_channel_id": 1430892060700971038,
+    "source_channel_name": null,
+    "is_monitored": false,
+    "is_webhook": true,
+    "action": "detected",
+    "timestamp": "2025-10-28 00:07:46"
+  },
+  {
+    "event": "mention_bot_ping",
+    "dest_channel_id": 1430892060700971038,
+    "dest_channel_name": "\u2757\u2503major-deals",
+    "timestamp": "2025-10-28 00:07:52"
+  },
+  {
+    "event": "message_detected",
+    "channel_id": 1392221235089244230,
+    "source_channel_id": 1392221235089244230,
+    "source_channel_name": null,
+    "is_monitored": false,
+    "is_webhook": true,
+    "action": "detected",
+    "timestamp": "2025-10-28 00:14:31"
+  },
+  {
+    "event": "message_classified",
+    "message_id": "1432583287825502238",
+    "category": "unknown",
+    "timestamp": "2025-10-28 00:14:31"
+  },
+  {
+    "event": "message_detected",
+    "channel_id": 1390535329575866368,
+    "source_channel_id": 1390535329575866368,
+    "source_channel_name": null,
+    "is_monitored": true,
+    "is_webhook": true,
+    "action": "detected",
+    "timestamp": "2025-10-28 00:24:06"
+  },
+  {
+    "event": "message_detected",
+    "channel_id": 1339718454906982492,
+    "source_channel_id": 1339718454906982492,
+    "source_channel_name": null,
+    "is_monitored": false,
+    "is_webhook": true,
+    "action": "detected",
+    "timestamp": "2025-10-28 00:24:18"
+  }
+]

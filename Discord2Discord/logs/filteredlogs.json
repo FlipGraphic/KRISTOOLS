@@ -1,0 +1,75 @@
+[
+  {
+    "time": "Tue 10/28/2025  0:04:41.91",
+    "level": "INFO",
+    "event": "Logs reset successfully"
+  },
+  {
+    "message_id": "1432581034855239742",
+    "source_channel_id": "1400543254864466071",
+    "source_channel_name": "1400543254864466071",
+    "dest_channel_id": 1431196259149938728,
+    "dest_channel_name": "Filtered-UPCOMING",
+    "content": "314109411",
+    "link_type": "UPCOMING",
+    "webhook_url": null,
+    "event": "filter_classify",
+    "embeds": [
+      {
+        "title": "ONE+ HP 18V Brushless Cordless 7-1/4 in. Circular Saw (Tool Only)",
+        "image": {
+          "url": "https://cdn.discordapp.com/attachments/1400543254864466071/1432581035505225738/item.png?ex=6901928e&is=6900410e&hm=43ea836d37dec5fecea8e4637f6fdd29e2999afae68234f11507937a02fa74e8&"
+        }
+      }
+    ],
+    "timestamp": "2025-10-28 00:05:34",
+    "discord_link": "https://discord.com/channels/1382165232004239470/1431196259149938728/1432581034855239742"
+  },
+  {
+    "message_id": "1432581239906500648",
+    "source_channel_id": "1402703014971834438",
+    "source_channel_name": "1402703014971834438",
+    "dest_channel_id": 1431180149973581986,
+    "dest_channel_name": "Filtered-MAVELY",
+    "content": "## Want wins like this? Book your <#1257072308133040259> to scale to 5k/month!\n112",
+    "link_type": "MAVELY",
+    "webhook_url": null,
+    "event": "filter_classify",
+    "embeds": [],
+    "timestamp": "2025-10-28 00:06:22",
+    "discord_link": "https://discord.com/channels/1382165232004239470/1431180149973581986/1432581239906500648"
+  },
+  {
+    "message_id": "1432581313344573573",
+    "source_channel_id": "1293347112439775275",
+    "source_channel_name": "1293347112439775275",
+    "dest_channel_id": 1431196259149938728,
+    "dest_channel_name": "Filtered-UPCOMING",
+    "content": "**__ONE+ HP 18V Brushless Cordless 7-1/4 in. Circular Saw (Tool Only)__**\n\n**\ud83c\udff7\ufe0fRETAIL:** $45.15\n**\ud83d\udcb8RESELL:** $100\n**\ud83c\udfeaWHERE:** Home Depot\n\n**\ud83d\uddd2\ufe0fNotes:** Plenty of stock available, clearance priced at $4...",
+    "link_type": "UPCOMING",
+    "webhook_url": null,
+    "event": "filter_classify",
+    "embeds": [],
+    "timestamp": "2025-10-28 00:06:40",
+    "discord_link": "https://discord.com/channels/1382165232004239470/1431196259149938728/1432581313344573573"
+  },
+  {
+    "message_id": "1432583287825502238",
+    "source_channel_id": "1392221235089244230",
+    "source_channel_name": "1392221235089244230",
+    "dest_channel_id": 1431180149973581986,
+    "dest_channel_name": "Filtered-MAVELY",
+    "content": "[embed/attachment]",
+    "link_type": "MAVELY",
+    "webhook_url": null,
+    "event": "filter_classify",
+    "embeds": [
+      {
+        "title": "\ud83d\ude80 Nintendo - Switch 2 - Black",
+        "url": "https://api.bestbuy.com/click/-/6614313/pdp?IPID=3031536"
+      }
+    ],
+    "timestamp": "2025-10-28 00:14:31",
+    "discord_link": "https://discord.com/channels/1382165232004239470/1431180149973581986/1432583287825502238"
+  }
+]
